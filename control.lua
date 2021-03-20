@@ -408,7 +408,7 @@ script.on_event(defines.events.on_robot_pre_mined, require("script.OnRobotPreMin
 function OnPickedUpItem(event)
   if global.loadedWagonMap[event.item_stack.name] then
     game.players[event.player_index].remove_item(event.item_stack)
-    game.players[event.player_index].insert({name="vehicle-wagon", count=event.item_stack.count})
+    game.players[event.player_index].insert({name=global.loadedWagonMap[event.item_stack.name], count=event.item_stack.count})
   end
 end
 script.on_event(defines.events.on_picked_up_item, OnPickedUpItem)
@@ -419,7 +419,7 @@ script.on_event(defines.events.on_picked_up_item, OnPickedUpItem)
 local number = 1
 function OnMarkedForDeconstruction(event)
   -- Delete any player selections or load/unload actions associated with this wagon
-  if event.entity.name == "vehicle-wagon" or global.loadedWagonMap[event.entity.name] then
+  if event.entity.name == "vehicle-wagon" or global.loadedWagonMap[event.entity.name] or event.entity.name == "ferry-boat" then
     clearWagon(event.entity.unit_number)
   elseif (event.entity.type == "car" or event.entity.type == "spider-vehicle") then
     clearVehicle(entity)
@@ -471,7 +471,7 @@ function OnEntityDied(event)
       end
     end
     deleteWagon(entity.unit_number)
-  elseif entity.name == "vehicle-wagon" then
+  elseif entity.name == "vehicle-wagon" or entity.name == "ferry-boat" then
     clearWagon(entity.unit_number)
   elseif (event.entity.type == "car" or event.entity.type == "spider-vehicle") and not event.vehicle_loaded then
     -- Car died, 
@@ -514,7 +514,7 @@ function OnPlayerDrivingChangedState(event)
   local player = game.players[event.player_index]
   if player.vehicle then
     local vehicle = player.vehicle
-    if vehicle.name == "vehicle-wagon" then
+    if vehicle.name == "vehicle-wagon" or vehicle.name == "ferry-boat" then
       player.driving = false
     elseif global.loadedWagonMap[vehicle.name] then
       clearWagon(vehicle.unit_number, {silent=true, sound=true})

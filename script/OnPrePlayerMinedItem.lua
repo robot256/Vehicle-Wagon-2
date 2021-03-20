@@ -33,12 +33,12 @@ local function OnPrePlayerMinedItem(event)
       -- Loaded wagon data or vehicle entity is invalid
       -- Replace wagon with unloaded version and delete data
       game.print({"vehicle-wagon2.data-error", unit_number})  
-      replaceCarriage(entity, "vehicle-wagon", false, false)
+      replaceCarriage(entity, global.loadedWagonMap[entity.name], false, false)
     elseif not game.entity_prototypes[wagonData.name] then
       -- Loaded wagon data or vehicle entity is invalid
       -- Replace wagon with unloaded version and delete data
       game.print({"vehicle-wagon2.vehicle-prototype-error", unit_number, global.wagon_data[unit_number].name})  
-      replaceCarriage(entity, "vehicle-wagon", false, false)
+      replaceCarriage(entity, global.loadedWagonMap[entity.name], false, false)
     else
       -- We can try to unload this wagon
       local vehicle = unloadVehicleWagon({player_index=player_index,
@@ -96,14 +96,14 @@ local function OnPrePlayerMinedItem(event)
     -- Delete any requests for unloading this particular wagon
     deleteWagon(unit_number)
     
-  elseif entity.name == "vehicle-wagon" then
+  elseif entity.name == "vehicle-wagon" or entity.name == "ferry-boat" then
     -- Delete any requests for loading this particular wagon
     clearWagon(entity.unit_number)
     
   elseif entity.name == "item-on-ground" then
     -- Change item-on-ground to unloaded wagon before player picks it up
     if entity.stack.valid_for_read and global.loadedWagonMap[entity.stack.name] then
-      entity.stack.set_stack({name="vehicle-wagon", count=entity.stack.count})
+      entity.stack.set_stack({name=global.loadedWagonMap[entity.stack.name], count=entity.stack.count})
     end
   elseif (event.entity.type == "car" or event.entity.type == "spider-vehicle") then
     clearVehicle(entity)

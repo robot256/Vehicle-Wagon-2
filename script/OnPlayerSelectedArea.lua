@@ -26,9 +26,9 @@ local function OnPlayerSelectedArea(event)
     local selected_loaded_wagons = {}
     for _,entity in pairs(event.entities) do
       if entity and entity.valid then
-        if global.loadedWagonMap[entity.name]then
+        if global.loadedWagonMap[entity.name] then
           table.insert(selected_loaded_wagons, entity)
-        elseif entity.name == "vehicle-wagon" then
+        elseif entity.name == "vehicle-wagon" or entity.name == "ferry-boat" then
           table.insert(selected_empty_wagons, entity)
         elseif (entity and entity.valid and (entity.type == "car" or entity.type == "spider-vehicle")) then
           table.insert(selected_vehicles, entity)
@@ -77,14 +77,14 @@ local function OnPlayerSelectedArea(event)
         -- Replace wagon with unloaded version and delete data
         game.print{"vehicle-wagon2.data-error", unit_number}
         deleteWagon(unit_number)
-        replaceCarriage(loaded_wagon, "vehicle-wagon", false, false)
+        replaceCarriage(loaded_wagon, global.loadedWagonMap[loaded_wagon.name], false, false)
 
       elseif not game.entity_prototypes[global.wagon_data[unit_number].name] then
         game.print{"vehicle-wagon2.vehicle-prototype-error", unit_number, global.wagon_data[unit_number].name}
         -- Loaded wagon data or vehicle entity is invalid
         -- Replace wagon with unloaded version and delete data
         deleteWagon(unit_number)
-        replaceCarriage(loaded_wagon, "vehicle-wagon", false, false)
+        replaceCarriage(loaded_wagon, global.loadedWagonMap[loaded_wagon.name], false, false)
 
       elseif in_space and not (
             (game.entity_prototypes[global.wagon_data[unit_number].name].type == "spider-vehicle") or 
@@ -230,6 +230,9 @@ local function OnPlayerSelectedArea(event)
             player.print{"vehicle-wagon2.unknown-vehicle-error", vehicle.localised_name}
             clearSelection(index)
           else
+            if wagon.name == "ferry-boat" then
+              loaded_name = "loaded-ferry-boat"
+            end
             player.surface.play_sound{path = "winch-sound", position = wagon.position}
 
             global.action_queue[wagon.unit_number] = {
@@ -267,6 +270,10 @@ local function OnPlayerSelectedArea(event)
       local vehicle_prototype = game.entity_prototypes[global.wagon_data[unit_number].name]
       local min_distance = vehicle_prototype.radius + math.abs(wagon.prototype.collision_box.right_bottom.x)
       local max_distance = vehicle_prototype.radius + UNLOAD_RANGE
+      
+      if wagon.name == "loaded-ferry-boat" then
+        max_distance = vehicle_prototype.radius + UNLOAD_RANGE*10
+      end
 
       if global.action_queue[unit_number] then
         -- This wagon already has a pending action

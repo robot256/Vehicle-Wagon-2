@@ -16,6 +16,9 @@ function makeGlobalMaps()
       table.insert(global.loadedWagonList, k)
     end
   end
+  
+  global.loadedWagonMap["loaded-ferry-boat"] = "ferry-boat"
+  table.insert(global.loadedWagonList, "loaded-ferry-boat")
 
   -- Need to check max weight as we go through
   local useWeights = settings.startup["vehicle-wagon-use-custom-weights"].value
