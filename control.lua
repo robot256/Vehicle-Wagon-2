@@ -28,7 +28,8 @@
 require("config")
 
 
-replaceCarriage = require("__Robot256Lib__/script/carriage_replacement").replaceCarriage
+-- Wrapped by local replaceCarriage function
+replaceCarriageFunc = require("__Robot256Lib__/script/carriage_replacement").replaceCarriage
 blueprintLib = require("__Robot256Lib__/script/blueprint_replacement")
 saveRestoreLib = require("__Robot256Lib__/script/save_restore")
 
@@ -371,6 +372,22 @@ function clearVehicle(vehicle, flags)
   end
 end
 
+function replaceCarriage(carriage, newName, raiseBuilt, raiseDestroy, flip)
+  -- The train id will change when the carriage is replaced
+  local old_id = carriage.train.id
+
+  local wagon = replaceCarriageFunc(carriage, newName, raiseBuilt, raiseDestroy, flip)
+
+  -- Train Network for Players tracks trains by their id, which changes when carriages
+  -- are replaced
+  if wagon and wagon.valid then
+    if remote.interfaces["TNfP"] and remote.interfaces["TNfP"].update_train_id then
+      remote.call("TNfP", "update_train_id", wagon.train, old_id)
+    end
+  end
+
+  return wagon
+end
 
 --== ON_PLAYER_USED_CAPSULE ==--
 -- Queues load/unload data when player clicks with the winch.
