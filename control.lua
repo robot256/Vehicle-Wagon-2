@@ -396,10 +396,11 @@ script.on_event(defines.events.on_picked_up_item, OnPickedUpItem)
 -- When a wagon is marked for deconstruction, cancel any pending actions to load or unload
 local number = 1
 function OnMarkedForDeconstruction(event)
+  local entity = event.entity
   -- Delete any player selections or load/unload actions associated with this wagon
-  if event.entity.name == "vehicle-wagon" or global.loadedWagonMap[event.entity.name] then
-    clearWagon(event.entity.unit_number)
-  elseif (event.entity.type == "car" or event.entity.type == "spider-vehicle") then
+  if entity.name == "vehicle-wagon" or global.loadedWagonMap[entity.name] then
+    clearWagon(entity.unit_number)
+  elseif (entity.type == "car" or entity.type == "spider-vehicle") then
     clearVehicle(entity)
   end
 end
