@@ -18,25 +18,31 @@ if storage.wagon_data then
   local new_wagon_data = {}
   -- Need to create all the stored vehicles on the hidden surface
   for loaded_unit_number,wagon_data in pairs(storage.wagon_data) do
-    local loaded_wagon = wagon_data.wagon
-    -- Create the hidden surface if necessary and create the vehicle, and update the stored data if it worked
-    local new_data = migrateLoadedWagon(loaded_unit_number)
-    if new_data then
-      new_wagon_data[loaded_unit_number] = new_data
-    elseif loaded_wagon and loaded_wagon.valid then
-      -- Failed to migrate, if wagon exists make it an empty wagon
-      -- Replace loaded wagon with unloaded wagon
-      local wagon = replaceCarriage(loaded_wagon, "vehicle-wagon", false, false)
+    log(serpent.block(wagon_data))
+    if not wagon_data.vehicle and wagon_data.items then
+      local loaded_wagon = wagon_data.wagon
+      -- Create the hidden surface if necessary and create the vehicle, and update the stored data if it worked
+      local new_data = migrateLoadedWagon(loaded_unit_number)
+      if new_data then
+        new_wagon_data[loaded_unit_number] = new_data
+      elseif loaded_wagon and loaded_wagon.valid then
+        -- Failed to migrate, if wagon exists make it an empty wagon
+        -- Replace loaded wagon with unloaded wagon
+        local wagon = replaceCarriage(loaded_wagon, "vehicle-wagon", false, false)
 
-      -- Check that unloaded wagon was created correctly
-      if wagon and wagon.valid then
-        -- Restore correct minable property to empty wagon
-        if not storage.unminable_enabled then
-          wagon.minable = true
+        -- Check that unloaded wagon was created correctly
+        if wagon and wagon.valid then
+          -- Restore correct minable property to empty wagon
+          if not storage.unminable_enabled then
+            wagon.minable = true
+          end
+        else
+          log({"vehicle-wagon2.migrate-empty-wagon-error"})
         end
-      else
-        log({"vehicle-wagon2.migrate-empty-wagon-error"})
       end
+    else
+      -- This has already been migrated
+      new_wagon_data[loaded_unit_number] = wagon_data
     end
   end
   
