@@ -3,7 +3,9 @@
 .git
 example.png
 publish_exclude.txt
-publish_mod.bat
 reference_images
 Thumbs.db
 slopefun
+.bat
+.exe
+.gitattributes
