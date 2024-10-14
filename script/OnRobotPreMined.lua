@@ -19,158 +19,41 @@
 -- If vehicle cannot be unloaded, send its contents away in the robot piece by piece.
 function OnRobotPreMined(event)
   local entity = event.entity
-  if global.loadedWagonMap[entity.name] then
-      
+  if storage.loadedWagonMap[entity.name] then
     -- Player or robot is mining a loaded wagon
     -- Attempt to unload the wagon nearby
     local unit_number = entity.unit_number
     local robot = event.robot
   
-    local wagonData = global.wagon_data[unit_number]
+    local wagonData = storage.wagon_data[unit_number]
     if not wagonData then
       -- Loaded wagon data or vehicle entity is invalid
-      -- Replace wagon with unloaded version and delete data
-      game.print({"vehicle-wagon2.data-error", unit_number})  
-      deleteWagon(unit_number)
-      replaceCarriage(entity, "vehicle-wagon", false, false)
-    elseif not game.entity_prototypes[wagonData.name] then
-      game.print({"vehicle-wagon2.vehicle-prototype-error", unit_number, global.wagon_data[unit_number].name})  
+      game.print({"vehicle-wagon2.data-error", unit_number})
+    elseif not wagonData.vehicle or not wagonData.vehicle.valid then
       -- Loaded wagon data or vehicle entity is invalid
-      -- Replace wagon with unloaded version and delete data
-      deleteWagon(unit_number)
-      replaceCarriage(entity, "vehicle-wagon", false, false)
+      game.print({"vehicle-wagon2.vehicle-missing-error", loaded_unit_number, wagon_data.name})
     else
       -- We can try to unload this wagon
-      local allow_robot_unloading = settings.global["vehicle-wagon-allow-robot-unloading"].value
-      local vehicle = nil
-      -- Check if this is a Creative Mod Instant Deconstruct (tm) operation
-      if not event.robot.get_inventory or #event.robot.get_inventory(defines.inventory.robot_cargo) == 0 then
-        vehicle = unloadVehicleWagon({status="unload", wagon=entity, replace_wagon=false})
-      elseif allow_robot_unloading then
-        vehicle = unloadVehicleWagon({status="unload", wagon=entity, replace_wagon=true})
-      end
+      local vehicle = unloadVehicleWagon{status="unload", wagon=entity, replace_wagon=false}
       
       if not vehicle then
-        -- Vehicle could not be unloaded
-        -- First check for inventory contents
-        local robotInventory = event.robot.get_inventory(defines.inventory.robot_cargo)
-        local robotSize = 1 + event.robot.force.worker_robots_storage_bonus
-        local robotEmpty = robotInventory.is_empty()
-        
-        if robotEmpty and wagonData.items.trunk then
-          for index,stack in pairs(wagonData.items.trunk) do
-            if not stack.count then stack.count = 1 end
-            --game.print("Giving robot cargo stack: "..stack.name.." : "..stack.count)
-            wagonData.items.trunk[index] = saveRestoreLib.insertStack(robotInventory, stack, robotSize)
-            if not robotInventory.is_empty() then
-              robotEmpty = false
-              break
-            end
-          end
-        end
-        
-        if robotEmpty and wagonData.items.ammo then
-          for index,stack in pairs(wagonData.items.ammo) do
-            if not stack.count then stack.count = 1 end
-            --game.print("Giving robot ammo stack: "..stack.name.." : "..stack.count)
-            wagonData.items.ammo[index] = saveRestoreLib.insertStack(robotInventory, stack, robotSize)
-            if not robotInventory.is_empty() then
-              robotEmpty = false
-              break
-            end
-          end
-        end
-        
-        if robotEmpty and wagonData.burner then
-          if robotEmpty and wagonData.burner.inventory then
-            for index,stack in pairs(wagonData.burner.inventory) do
-              if not stack.count then stack.count = 1 end
-              --game.print("Giving robot burner fuel stack: "..stack.name.." : "..stack.count)
-              wagonData.burner.inventory[index] = saveRestoreLib.insertStack(robotInventory, stack, robotSize)
-              if not robotInventory.is_empty() then
-                robotEmpty = false
-                break
-              end
-            end
-          end
-          if robotEmpty and wagonData.burner.inventory then
-            for index,stack in pairs(wagonData.burner.inventory) do
-              --game.print("Giving robot burner burnt stack: "..stack.name.." : "..stack.count)
-              if not stack.count then stack.count = 1 end
-              wagonData.burner.inventory[index] = saveRestoreLib.insertStack(robotInventory, stack, robotSize)
-              if not robotInventory.is_empty() then
-                robotEmpty = false
-                break
-              end
-            end
-          end
-        end
-
-        if robotEmpty and wagonData.items.grid and not wagonData.items.equip_stacks and not wagonData.items.fuel_stacks then
-          wagonData.items.equip_stacks, wagonData.items.fuel_stacks = saveRestoreLib.saveGridStacks(wagonData.items.grid)
-        end
-        if robotEmpty and wagonData.items.fuel_stacks then
-          for index,stack in pairs(wagonData.items.fuel_stacks) do
-            if not stack.count then stack.count = 1 end
-            local count = stack.count
-            --game.print("Giving robot equipment fuel stack: "..stack.name.." : "..stack.count)
-            wagonData.items.fuel_stacks[index] = saveRestoreLib.insertStack(robotInventory, stack, robotSize)
-            if not robotInventory.is_empty() then
-              if wagonData.items.fuel_stacks[index] then
-                count = count - wagonData.items.fuel_stacks[index].count
-              end
-              saveRestoreLib.removeStackFromSavedGrid(wagonData.items.grid, {name=stack.name, count=count})
-              robotEmpty = false
-              break
-            end
-          end
-        end
-        if robotEmpty and wagonData.items.equip_stacks then
-          for index,stack in pairs(wagonData.items.equip_stacks) do
-            if not stack.count then stack.count = 1 end
-            local count = stack.count
-            --game.print("Giving robot equipment stack: "..stack.name.." : "..stack.count)
-            wagonData.items.equip_stacks[index] = saveRestoreLib.insertStack(robotInventory, stack, robotSize)
-            if not robotInventory.is_empty() then
-              if wagonData.items.equip_stacks[index] then
-                count = count - wagonData.items.equip_stacks[index].count
-              end
-              saveRestoreLib.removeStackFromSavedGrid(wagonData.items.grid, {name=stack.name, count=count})
-              robotEmpty = false
-              break
-            end
-          end
-        end
-        
-        if robotEmpty then
-          local itemName = wagonData.name
-          local proto = game.entity_prototypes[wagonData.name]
-          if proto and proto.mineable_properties and proto.mineable_properties.products then
-            -- Assume this entity gives only one item when you mine it, and that that is the vehicle
-            itemName = proto.mineable_properties.products[1].name
-          end
-          if saveRestoreLib.insertStack(robotInventory, {name=itemName, count=1}, robotSize) == nil then
-            --game.print("Gave robot "..wagonData.name.." : 1")
-          else
-            game.print({"vehicle-wagon2.vehicle-prototype-error", unit_number, global.wagon_data[unit_number].name})  
-          end
-          replaceCarriage(entity, "vehicle-wagon", false, false)
-          -- Delete wagon data and any associated requests
-          deleteWagon(unit_number)
-        end
+        -- Teleport it on top of the wagon and deconstruct everything
+        wagonData.vehicle.teleport(entity.position, entity.surface)
+        wagonData.vehicle.order_deconstruction(robot.force)
+        wagonData.vehicle = nil  -- break the link to the vehicle entity so it's not deleted
       end
-      
     end
-    
-  elseif entity.name == "vehicle-wagon" then
-    -- Delete any requests for loading this particular wagon
-    clearWagon(entity.unit_number)
+    -- Clear the item in the wagon
+    local wagon_inv = entity.get_inventory(defines.inventory.cargo_wagon)
+    if wagon_inv then
+      wagon_inv.clear()
+    end
+    deleteWagon(unit_number)
     
   elseif entity.name == "item-on-ground" then
     -- Change item-on-ground to unloaded wagon before robot picks it up
-    if entity.stack.valid_for_read and global.loadedWagonMap[entity.stack.name] then
+    if entity.stack.valid_for_read and storage.loadedWagonMap[entity.stack.name] then
       entity.stack.set_stack({name="vehicle-wagon", count=entity.stack.count})
     end
   end
-  
 end

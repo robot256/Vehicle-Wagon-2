@@ -16,9 +16,9 @@ makeGlobalMaps()
   
   --=================================
   -- Old format: 
-  -- global.vehicle_data[player_index] contains loaded vehicles each player clicked on.
-  -- global.wagon_data[player_index] contains player actions to load and unload vehicles
-  -- global.wagon_data[unit_number] contains vehicle data saved for each loaded wagon unit
+  -- storage.vehicle_data[player_index] contains loaded vehicles each player clicked on.
+  -- storage.wagon_data[player_index] contains player actions to load and unload vehicles
+  -- storage.wagon_data[unit_number] contains vehicle data saved for each loaded wagon unit
   -- {
   --      name = vehicle entity name stored
   --      health = vehicle health
@@ -60,9 +60,9 @@ makeGlobalMaps()
   --
   --======================
   -- New Format:
-  -- global.player_selection[player_index] contains player selections
-  -- global.action_queue[unit_number] contains load and unload actions while their animation finishes, indexed by empty or loaded wagon unit_number
-  -- global.wagon_data[unit_number] contains vehicle data saved for each loaded wagon unit
+  -- storage.player_selection[player_index] contains player selections
+  -- storage.action_queue[unit_number] contains load and unload actions while their animation finishes, indexed by empty or loaded wagon unit_number
+  -- storage.wagon_data[unit_number] contains vehicle data saved for each loaded wagon unit
   -- {
   --      wagon = LuaEntity <(loaded_wagon entity reference)
   --      name = vehicle entity name stored
@@ -113,72 +113,34 @@ makeGlobalMaps()
 ---------------
 
 
-if global.vehicle_data then
-
-  -- Convert pairs of winches to single winches
-  for id,player in pairs(game.players) do
-    -- Main player inventory
-    local inv = player.get_main_inventory()
-    if inv and inv.valid then
-      local count = math.floor(inv.get_item_count("winch")/2)
-      if count > 0 then
-        inv.remove({name="winch", count=count})
-      end
-    end
-    -- Player cursor stack
-    local cursor = player.cursor_stack
-    if cursor and cursor.valid_for_read and cursor.name == "winch" then
-      cursor.count = math.ceil(cursor.count/2)
-    end
-  end
-  
-  -- Convert stored winches to single winches
-  for _,surface in pairs(game.surfaces) do
-    for _,box in pairs(surface.find_entities_filtered{type = {"container","logistic-container","cargo-wagon","car"}}) do
-      local inv
-      if box.type == "container" or box.type == "logistic-container" then
-        inv = box.get_inventory(defines.inventory.chest)
-      elseif box.type == "car" then
-        inv = box.get_inventory(defines.inventory.car_trunk)
-      elseif box.type == "cargo-wagon" then
-        inv = box.get_inventory(defines.inventory.cargo_wagon)
-      end
-      if inv and inv.valid then
-        local count = math.floor(inv.get_item_count("winch")/2)
-        if count > 0 then
-          inv.remove({name="winch", count=count})
-        end
-      end
-    end
-  end
-
+if storage.vehicle_data then
 
   log("Vehicle Wagon 2 global before migration:")
   log(serpent.block(global))
 
-  -- If global.vehicle_data exists at all, then we are loading a 1.2.x save.
+  -- If storage.vehicle_data exists at all, then we are loading a 1.2.x save.
   -- Step 0: Clear Pending Selections and Actions from old vehicle_data table
-  for player_index,_ in pairs(global.vehicle_data) do
+  for player_index,_ in pairs(storage.vehicle_data) do
     local player = game.get_player(player_index)
     if player then
       player.clear_gui_arrow()
     end
   end
-  global.vehicle_data = nil  -- No longer used
+  storage.vehicle_data = nil  -- No longer used
 
-  if global.wagon_data then
+  if storage.wagon_data then
     -- Step 1: Clear Pending Selections and Actions from wagon_data before reformatting it
     for player_index,player in pairs(game.players) do
-      if global.wagon_data[player_index] then
+      if storage.wagon_data[player_index] then
         player.clear_gui_arrow()
-        global.wagon_data[player_index] = nil
+        storage.wagon_data[player_index] = nil
       end
     end
     
     -- Step 2: Make a list of all loaded wagon entities in the game
     local loaded_wagons = {}
     for _,surface in pairs(game.surfaces) do
-      for _,wagon in pairs(surface.find_entities_filtered{name = global.loadedWagonList}) do
+      for _,wagon in pairs(surface.find_entities_filtered{name = storage.loadedWagonList}) do
         log("Found loaded wagon "..tostring(wagon and wagon.name).." "..tostring(wagon and wagon.unit_number))
         loaded_wagons[wagon.unit_number] = wagon
       end
@@ -186,26 +148,26 @@ if global.vehicle_data then
     
     -- Step 3: Copy contents of wagon_data to a new table in the new format
     local new_wagon_data = {}
-    for unit_number,data in pairs(global.wagon_data) do
+    for unit_number,data in pairs(storage.wagon_data) do
       -- Make sure this is a valid wagon data entry
       if not data.items then
         -- Not a valid wagon data structure
-        global.wagon_data[unit_number] = nil
+        storage.wagon_data[unit_number] = nil
       else
         -- Make sure this loaded wagon still exists
         if not loaded_wagons[unit_number] or not loaded_wagons[unit_number].valid then
           game.print({"vehicle-wagon2.migrate-wagon-error", unit_number, data.name})  
-          global.wagon_data[unit_number] = nil
+          storage.wagon_data[unit_number] = nil
         else
           -- Make sure this data is for a valid vehicle type
-          if not data.name or not game.entity_prototypes[data.name] then
+          if not data.name or not prototypes.entity[data.name] then
             -- Give error message
             if data.name then
               game.print({"vehicle-wagon2.migrate-prototype-error", unit_number, data.name})
             end
             -- Replace loaded wagon with empty one
             replaceCarriage(loaded_wagons[unit_number], "vehicle-wagon", false, false)
-            global.wagon_data[unit_number] = nil
+            storage.wagon_data[unit_number] = nil
           else
           
             -- Migrate data
@@ -279,11 +241,11 @@ if global.vehicle_data then
             -- (Doesn't matter if there are too many or the wrong types. Remainders will be put in trunk when unloaded.)
             newData.items = {ammo={}, trunk={}}
             for item_name,count in pairs(data.items) do
-              if game.item_prototypes[item_name] and type(count)=="number" then
-                if game.item_prototypes[item_name].fuel_category then
+              if prototypes.item[item_name] and type(count)=="number" then
+                if prototypes.item[item_name].fuel_category then
                   -- Put fuel items in the burner fuel inventory
                   table.insert(newData.burner.inventory, {name=item_name, count=count})
-                elseif game.item_prototypes[item_name].get_ammo_type() then
+                elseif prototypes.item[item_name].get_ammo_type() then
                   -- Put ammo in the ammo inventory
                   table.insert(newData.items.ammo, {name=item_name, count=count})
                 else
@@ -302,27 +264,13 @@ if global.vehicle_data then
       end
     end
     -- Store new global data table
-    global.wagon_data = nil
-    global.wagon_data = new_wagon_data
+    storage.wagon_data = nil
+    storage.wagon_data = new_wagon_data
   end
 
   -- Clear other flags from the old version
-  global.found = nil  -- No longer used
-  global.tutorials = nil  -- Reset tutorial message sequences
-  
-  
-  -- If there are pairs of winches in any loaded vehicle, halve them
-  if global.wagon_data then
-    for id,data in pairs(global.wagon_data) do
-      if data.items and data.items.trunk then
-        for _,stack in pairs(data.items.trunk) do
-          if stack.name == "winch" then
-            stack.count = math.ceil(stack.count/2)
-          end
-        end
-      end
-    end
-  end
+  storage.found = nil  -- No longer used
+  storage.tutorials = nil  -- Reset tutorial message sequences
   
   game.print({"vehicle-wagon2.migrate-12x-success"})
   

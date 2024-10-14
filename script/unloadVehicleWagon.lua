@@ -20,9 +20,9 @@ function unloadVehicleWagon(action)
   local unload_position = action.unload_position
   local unload_orientation = action.unload_orientation
   local loaded_wagon = action.wagon
-  local player = nil
+  local player
   local replace_wagon = action.replace_wagon
-  if replace_wagon == nil then
+  if replace_wagon == nil then  -- If parameter is omitted, then it must assume true
     replace_wagon = true
   end
 
@@ -35,7 +35,7 @@ function unloadVehicleWagon(action)
   local loaded_unit_number = nil
   if not(loaded_wagon and loaded_wagon.valid) then
     if player then
-      player.print({"vehicle-wagon2.wagon-invalid-error"})
+      player.create_local_flying_text{text={"vehicle-wagon2.wagon-invalid-error"}}
     else
       game.print({"vehicle-wagon2.wagon-invalid-error"})
     end
@@ -44,13 +44,25 @@ function unloadVehicleWagon(action)
   loaded_unit_number = loaded_wagon.unit_number
 
   -- Make sure the data for this wagon is still valid
-  local wagon_data = global.wagon_data[loaded_unit_number]
+  local wagon_data = storage.wagon_data[loaded_unit_number]
   if not wagon_data then
     if player then
-      player.print({"vehicle-wagon2.data-error", loaded_unit_number})
+      player.create_local_flying_text{text={"vehicle-wagon2.data-error", loaded_unit_number}, position=loaded_wagon.position}
     else
       game.print({"vehicle-wagon2.data-error", loaded_unit_number})
     end
+    return
+  end
+  
+  -- Make sure the vehicle for this wagon still exists on the hidden surface
+  local vehicle = wagon_data.vehicle
+  if not vehicle or not vehicle.valid then
+    if player then
+      player.create_local_flying_text{text={"vehicle-wagon2.vehicle-missing-error", loaded_unit_number, wagon_data.name}, position=loaded_wagon.position}
+    else
+      game.print({"vehicle-wagon2.vehicle-missing-error", loaded_unit_number, wagon_data.name})
+    end
+    storage.wagon_data[loaded_unit_number] = nil
     return
   end
 
@@ -83,7 +95,7 @@ function unloadVehicleWagon(action)
   if not unload_orientation then
     -- Place vehicle with same direction as the loaded wagon sprite by default.
     unload_orientation = loaded_wagon.orientation
-    if global.loadedWagonFlip[loaded_wagon.name] then
+    if storage.loadedWagonFlip[loaded_wagon.name] then
       unload_orientation = unload_orientation + 0.5
     end
   end
@@ -95,151 +107,40 @@ function unloadVehicleWagon(action)
   direction = math.fmod(direction, 8)
 
 
-  -- Create the vehicle
-  local vehicle = surface.create_entity{
-                      name = wagon_data.name,
-                      position = unload_position,
-                      force = force,
-                      direction = direction,
-                      raise_built = false
-                    }
-
-  -- If vehicle not created, give up
-  if not vehicle then
+  -- Teleport the vehicle back into place
+  vehicle.orientation = unload_orientation
+  if vehicle.teleport(unload_position, surface, true, false) then
+    -- Teleport was successful
+    if wagon_data.active == false then
+      vehicle.active = false
+    else
+      vehicle.active = true
+    end
+    if wagon_data.operable == false then
+      vehicle.operable = false
+    else
+      vehicle.operable = true
+    end
+    local logipoint = vehicle.get_logistic_point(defines.logistic_member_index.spidertron_requester)
+    if logipoint then
+      logipoint.enabled = wagon_data.logistics_enabled or true
+    end
+  else
+    -- Vehicle not teleported leave data and wagon as it is
     return
   end
-
-  -- Set the orientation (this is where we can use the original floating point value
-  vehicle.orientation = unload_orientation
-
-  -- Set vehicle user to the player who unloaded, or the saved last user if unloaded automatically
-  if not player_index and wagon_data.last_user then
-    player_index = wagon_data.last_user
-  end
-  if player_index and game.players[player_index] then
-    vehicle.last_user = game.players[player_index]
-  end
-
-  -- Restore custom Spidertron name (nil clears it, others ignore it)
-  vehicle.entity_label = wagon_data.entity_label
-
-  -- Restore vehicle parameters from global data
-  vehicle.health = wagon_data.health
-  if wagon_data.color then vehicle.color = wagon_data.color end
-
-  -- Flags default to true on creation, and are only saved in wagon_data if they should be false
-  -- But setting flags to nil is same as setting false, so only assign false if wagon_data entry is not nil
-  if wagon_data.minable == false then vehicle.minable = false end
-  if wagon_data.destructible == false then vehicle.destructible = false end
-  if wagon_data.operable == false then vehicle.operable = false end
-  if wagon_data.rotatable == false then vehicle.rotatable = false end
-  if wagon_data.enable_logistics_while_moving == false then
-    vehicle.enable_logistics_while_moving = false
-  end
-
-  -- Restore burner
-  local r1 = saveRestoreLib.restoreBurner(vehicle.burner, wagon_data.burner)
-
-  -- Restore equipment grid
-  local r2 = saveRestoreLib.restoreGrid(vehicle.grid, wagon_data.grid)
-  r1 = saveRestoreLib.mergeStackLists(r1, r2)
-
-  -- Restore inventory contents and settings
-  if vehicle.type == "car" then
-    -- Restore inventory filters
-    if wagon_data.filters then
-      saveRestoreLib.restoreFilters(vehicle.get_inventory(defines.inventory.car_ammo), wagon_data.filters.ammo)
-      saveRestoreLib.restoreFilters(vehicle.get_inventory(defines.inventory.car_trunk), wagon_data.filters.trunk)
-    end
-
-    -- Restore ammo inventory if this car has guns
-    if vehicle.selected_gun_index then
-      local ammoInventory = vehicle.get_inventory(defines.inventory.car_ammo)
-      local r2 = saveRestoreLib.insertInventoryStacks(ammoInventory, wagon_data.items.ammo)
-      r1 = saveRestoreLib.mergeStackLists(r1, r2)
-
-      -- Restore the selected gun index
-      if wagon_data.selected_gun_index then
-        vehicle.selected_gun_index = wagon_data.selected_gun_index
-      end
-    end
-
-    -- Restore the cargo inventory
-    local trunkInventory = vehicle.get_inventory(defines.inventory.car_trunk)
-    local r2 = saveRestoreLib.insertInventoryStacks(trunkInventory, wagon_data.items.trunk)
-    r1 = saveRestoreLib.mergeStackLists(r1, r2)
-
-    -- Try to insert remainders into trunk, spill whatever doesn't fit
-    if r1 then
-      local r2 = saveRestoreLib.insertInventoryStacks(trunkInventory, r1)
-      saveRestoreLib.spillStacks(r2, surface, unload_position)
-    end
-
-  elseif vehicle.type == "spider-vehicle" then
-    -- Restore inventory filters
-    if wagon_data.filters then
-      saveRestoreLib.restoreFilters(vehicle.get_inventory(defines.inventory.spider_ammo), wagon_data.filters.ammo)
-      saveRestoreLib.restoreFilters(vehicle.get_inventory(defines.inventory.spider_trunk), wagon_data.filters.trunk)
-    end
-
-    -- Restore ammo inventory if this spider has guns
-    if vehicle.selected_gun_index then
-      local ammoInventory = vehicle.get_inventory(defines.inventory.spider_ammo)
-      local r2 = saveRestoreLib.insertInventoryStacks(ammoInventory, wagon_data.items.ammo)
-      r1 = saveRestoreLib.mergeStackLists(r1, r2)
-
-      -- Restore the selected gun index
-      if wagon_data.selected_gun_index then
-        vehicle.selected_gun_index = wagon_data.selected_gun_index
-      end
-    elseif wagon_data.items.ammo then
-      r1 = saveRestoreLib.mergeStackLists(r1, wagon_data.items.ammo)
-    end
-
-    -- Restore the cargo inventory
-    local trunkInventory = vehicle.get_inventory(defines.inventory.spider_trunk)
-    local r2 = saveRestoreLib.insertInventoryStacks(trunkInventory, wagon_data.items.trunk)
-    r1 = saveRestoreLib.mergeStackLists(r1, r2)
-
-    -- Restore the trash inventory
-    local trashInventory = vehicle.get_inventory(defines.inventory.spider_trash)
-    local r2 = saveRestoreLib.insertInventoryStacks(trashInventory, wagon_data.items.trash)
-    r1 = saveRestoreLib.mergeStackLists(r1, r2)
-
-    -- Try to insert remainders into trunk and trash, spill whatever doesn't fit
-    if r1 then
-      local r2 = saveRestoreLib.insertInventoryStacks(trunkInventory, r1)
-      local r3 = saveRestoreLib.insertInventoryStacks(trashInventory, r2)
-      saveRestoreLib.spillStacks(r3, surface, unload_position)
-    end
-
-    -- Restore logistic requests
-    if wagon_data.logistic then
-      for slot,d in pairs(wagon_data.logistic) do
-        if d and d.name then
-          vehicle.set_vehicle_logistic_slot(slot, d)
-        end
-      end
-    end
-
-  end
-
-
-  -- Raise event for scripts
-  -- Added autodrive_data and GCKI_data to arguments. No need to test if they are set: If nil, they will be ignored!
-  script.raise_script_built{
-      entity = vehicle,
-      player_index = player_index,
-      vehicle_unloaded=true,  -- Custom parameter used by Vehicle Wagon
-      autodrive_data = wagon_data.autodrive_data,  -- Custom parameter used by Autodrive
-      GCKI_data = wagon_data.GCKI_data  -- Custom parameter used by GCKI
-    }
 
   -- Play sound associated with creating the vehicle
   surface.play_sound({path = "utility/build_medium", position = unload_position, volume_modifier = 0.7})
 
   -- Finished creating vehicle, clear loaded wagon data
-  global.wagon_data[loaded_wagon.unit_number] = nil
+  storage.wagon_data[loaded_wagon.unit_number] = nil
+  
+  -- Clear the item in the wagon
+  local wagon_inv = loaded_wagon.get_inventory(defines.inventory.cargo_wagon)
+  if wagon_inv then
+    wagon_inv.clear()
+  end
 
   -- Play sounds associated with creating the vehicle
   surface.play_sound({path = "latch-off", position = unload_position, volume_modifier = 0.7})
@@ -247,16 +148,18 @@ function unloadVehicleWagon(action)
   if replace_wagon then
     -- Replace loaded wagon with unloaded wagon
     local wagon = replaceCarriage(loaded_wagon, "vehicle-wagon", false, false)
-
+    
     -- Check that unloaded wagon was created correctly
     if wagon and wagon.valid then
+      -- Prevent player from opening shadow inventory
+      wagon.operable = false
       -- Restore correct minable property to empty wagon
-      if not global.unminable_enabled then
+      if not storage.unminable_enabled then
         wagon.minable = true
       end
     else
       if player then
-        player.print({"vehicle-wagon2.empty-wagon-error"})
+        player.create_local_flying_text{text={"vehicle-wagon2.empty-wagon-error"}, position=wagon_position}
       else
         game.print({"vehicle-wagon2.empty-wagon-error"})
       end

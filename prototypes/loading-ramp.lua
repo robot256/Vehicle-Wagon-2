@@ -1,0 +1,68 @@
+
+data:extend{ 
+  {
+    type = "inserter",
+    name = "loading-ramp",
+    icon = "__base__/graphics/icons/inserter.png",
+    flags = {"placeable-neutral", "placeable-player", "player-creation"},
+    minable = {mining_time = 1, result = "loading-ramp"},
+    max_health = 600,
+    corpse = "medium-remnants",
+    dying_explosion = "medium-explosion",
+    resistances =
+    {
+      {
+        type = "fire",
+        percent = 90
+      }
+    },
+    collision_mask = {layers={water_tile=true, rail=true, object=true, item=true}},
+    collision_box = {{-1.2, -1.2}, {1.2, 1.2}},
+    selection_box = {{-1.5, -1.5}, {1.5, 1.5}},
+    drawing_box = {{-1.5, -1.7}, {1.5, 1.5}},
+    draw_inserter_arrow = false,
+    extension_speed = 0.035,
+    rotation_speed = 0.014,
+    pickup_position = {0,1},
+    insert_position = {0,-2.2},
+    platform_picture = table.deepcopy(data.raw.inserter.inserter.platform_picture),
+    open_sound = table.deepcopy(data.raw.inserter.inserter.open_sound),
+    close_sound = table.deepcopy(data.raw.inserter.inserter.close_sound),
+    energy_source = {type = "void"},
+    circuit_connector = circuit_connector_definitions["storage-tank"],
+    circuit_wire_max_distance = 9,
+    allow_custom_vectors = false,
+    use_easter_egg = false,
+    filter_count = 5,
+  },
+  {
+    type = "container",
+    name = "vw-dummy-chest",
+    icon = "__base__/graphics/icons/wooden-chest.png",
+    hidden = true,
+    inventory_size = 1,
+    inventory_type = "normal",
+    max_health = 1000,
+    collision_mask = {layers={}},
+    collision_box = {{-0.4,-0.4},{0.4,0.4}},
+    selection_box = {{-0.5,-0.5},{0.5,0.5}},
+    selectable_in_game = false,
+    flags = {"placeable-neutral",
+             "not-on-map",
+             "not-deconstructable",
+             "not-blueprintable",
+             "hide-alt-info",
+             "not-flammable",
+             "no-automated-item-insertion"},
+  },
+  {
+		type = "item",
+		name = "loading-ramp",
+		icon = "__VehicleWagon2__/graphics/tech-icon.png",
+		icon_size = 128,
+    subgroup = "transport",
+		order = "a[train-system]-w[loading-ramp]",
+		place_result = "loading-ramp",
+		stack_size = 5
+	},
+}

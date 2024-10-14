@@ -90,9 +90,9 @@ function clearVisuals(p)
   if type(p) ~= "number" then
     player_index = p.index
   end
-  if global.player_selection[player_index] and global.player_selection[player_index].visuals then
-    for _,id in pairs(global.player_selection[player_index].visuals) do
-      rendering.destroy(id)
+  if storage.player_selection[player_index] and storage.player_selection[player_index].visuals then
+    for id,obj in pairs(storage.player_selection[player_index].visuals) do
+      obj.destroy()
     end
   end
 end
@@ -124,7 +124,9 @@ end
 -- target: selected entity to track
 function renderWagonVisuals(p, target, vehicle_radius)
   -- First clear existing renders for this player
-  clearVisuals(p)
+  if p then
+    clearVisuals(p)
+  end
   
   if not vehicle_radius then
     vehicle_radius = 0
@@ -143,26 +145,28 @@ function renderWagonVisuals(p, target, vehicle_radius)
   local visuals = {
     rendering.draw_polygon{
       color=RANGE_COLOR,
-      vertices={{target={max_distance,length_back}},
-                {target={min_distance,length_back}},
-                {target={max_distance,length_front}},
-                {target={min_distance,length_front}}},
+      vertices={{position={max_distance,length_back}},
+                {position={min_distance,length_back}},
+                {position={max_distance,length_front}},
+                {position={min_distance,length_front}}},
       target=target,
-      orientation=target.orientation,
+      orientation_target=target,
+      use_target_orientation=true,
       surface=target.surface,
-      players={p},
+      players=p and {p},
       draw_on_ground=true
     },
     rendering.draw_polygon{
       color=RANGE_COLOR,
-      vertices={{target={-min_distance,length_back}},
-                {target={-max_distance,length_back}},
-                {target={-min_distance,length_front}},
-                {target={-max_distance,length_front}}},
+      vertices={{position={-min_distance,length_back}},
+                {position={-max_distance,length_back}},
+                {position={-min_distance,length_front}},
+                {position={-max_distance,length_front}}},
       target=target,
-      orientation=target.orientation,
+      orientation_target=target,
+      use_target_orientation=true,
       surface=target.surface,
-      players={p},
+      players=p and {p},
       draw_on_ground=true
     },
     rendering.draw_arc{
@@ -171,10 +175,9 @@ function renderWagonVisuals(p, target, vehicle_radius)
       min_radius=min_distance,
       start_angle=wagon_angle+math.pi,
       angle=math.pi,
-      target=target,
-      target_offset=wagon_front,
+      target={entity=target, offset=wagon_front},
       surface=target.surface,
-      players={p},
+      players=p and {p},
       draw_on_ground=true
     },
     rendering.draw_arc{
@@ -183,22 +186,22 @@ function renderWagonVisuals(p, target, vehicle_radius)
       min_radius=min_distance,
       start_angle=wagon_angle,
       angle=math.pi,
-      target=target,
-      target_offset=wagon_back,
+      target={entity=target, offset=wagon_back},
       surface=target.surface,
-      players={p},
+      players=p and {p},
       draw_on_ground=true
     },
     rendering.draw_polygon{
       color=KEEPOUT_RANGE_COLOR,
-      vertices={{target={min_distance,length_back}},
-                {target={-min_distance,length_back}},
-                {target={min_distance,length_front}},
-                {target={-min_distance,length_front}}},
+      vertices={{position={min_distance,length_back}},
+                {position={-min_distance,length_back}},
+                {position={min_distance,length_front}},
+                {position={-min_distance,length_front}}},
       target=target,
-      orientation=target.orientation,
+      orientation_target=target,
+      use_target_orientation=true,
       surface=target.surface,
-      players={p},
+      players=p and {p},
       draw_on_ground=true
     },
     rendering.draw_arc{
@@ -207,10 +210,9 @@ function renderWagonVisuals(p, target, vehicle_radius)
       min_radius=0,
       start_angle=wagon_angle+math.pi,
       angle=math.pi,
-      target=target,
-      target_offset=wagon_front,
+      target={entity=target, offset=wagon_front},
       surface=target.surface,
-      players={p},
+      players=p and {p},
       draw_on_ground=true
     },
     rendering.draw_arc{
@@ -219,45 +221,14 @@ function renderWagonVisuals(p, target, vehicle_radius)
       min_radius=0,
       start_angle=wagon_angle,
       angle=math.pi,
-      target=target,
-      target_offset=wagon_back,
+      target={entity=target, offset=wagon_back},
       surface=target.surface,
-      players={p},
+      players=p and {p},
       draw_on_ground=true
     }
   }
 
   return visuals
-end
-
-function renderIcon(target, contents)
-  -- Check that target entity exists, and contents entity/icon is loaded in the game.
-  if target and game.entity_prototypes[contents] then
-    -- Create icon showing contents (will be deleted automatically when wagon is destroyed or unloaded)
-    local visuals = {
-      rendering.draw_sprite{
-        sprite="vw2-bg-icon",
-        x_scale=1.6,
-        y_scale=1.6,
-        render_layer="entity-info-icon",
-        target=target,
-        target_offset={0,BED_CENTER_OFFSET},
-        surface=target.surface,
-        only_in_alt_mode=true
-      },
-      rendering.draw_sprite{
-        sprite="entity."..contents,
-        x_scale=1.2,
-        y_scale=1.2,
-        render_layer="entity-info-icon",
-        target=target,
-        target_offset={0,BED_CENTER_OFFSET},
-        surface=target.surface,
-        only_in_alt_mode=true
-      }
-    }
-    return visuals
-  end
 end
 
 function renderLoadingRamp(wagon, vehicle)
@@ -294,7 +265,7 @@ function renderLoadingRamp(wagon, vehicle)
     local radius = vehicle.get_radius()
     local source_point = {x=wagon.position.x + closest_point.x, y=wagon.position.y + closest_point.y}
     local d = distance(vehicle.position, source_point)
-    local new_d = math.max(MIN_LOADING_RAMP_LENGTH, d - radius)
+    local new_d = math.max(MIN_LOADING_RAMP_LENGTH, d - radius + 0.25)
     local ratio = new_d / d
     local delta = {x=source_point.x-vehicle.position.x, y=source_point.y-vehicle.position.y}
     local new_delta = {x=delta.x * ratio, y=delta.y * ratio}
@@ -303,10 +274,9 @@ function renderLoadingRamp(wagon, vehicle)
     return wagon.surface.create_entity{
         name="loading-ramp-beam",
         position=wagon.position,
-        target_position=new_target,
-        source_position=wagon.position,
-        source_offset=closest_point,
-        duration=LOADING_EFFECT_TIME+EXTRA_RAMP_TIME
+        target_position = new_target,
+        source_position = source_point,
+        duration = LOADING_EFFECT_TIME+EXTRA_RAMP_TIME
     }
   else
     return nil
@@ -349,7 +319,7 @@ function renderUnloadingRamp(wagon, position, vehicle_radius)
   if closest_point then
     local source_point = {x=wagon.position.x + closest_point.x, y=wagon.position.y + closest_point.y}
     local d = distance(position, source_point)
-    local new_d = math.max(MIN_LOADING_RAMP_LENGTH, d - vehicle_radius)
+    local new_d = math.max(MIN_LOADING_RAMP_LENGTH, d - vehicle_radius + 0.25)
     local ratio = new_d / d
     local delta = {x=source_point.x-position.x, y=source_point.y-position.y}
     local new_delta = {x=delta.x * ratio, y=delta.y * ratio}
@@ -358,8 +328,7 @@ function renderUnloadingRamp(wagon, position, vehicle_radius)
     return wagon.surface.create_entity{
         name="unloading-ramp-beam",
         position=wagon.position,
-        source_position=wagon.position,
-        source_offset=closest_point,
+        source_position=source_point,
         target_position=new_target,
         duration=UNLOADING_EFFECT_TIME+EXTRA_RAMP_TIME
     }
@@ -367,4 +336,3 @@ function renderUnloadingRamp(wagon, position, vehicle_radius)
     return nil
   end
 end
-

@@ -18,24 +18,49 @@
 data:extend{
   {
 		type = "selection-tool",
-		name = "winch",
+		name = "winch-tool",
 		icon = "__VehicleWagon2__/graphics/winch-icon.png",
 		icon_size = 64,
-    mipmaps = 1,
-		subgroup = "transport",
-		order = "a[train-system]-w[winch]",
-		stack_size = 1,
+    stack_size = 1,
+    flags = {"only-in-cursor", "not-stackable", "spawnable"},
+    subgroup = "spawnables",
+    select = {
+      border_color = {r=0.75, g=0.75},
+      cursor_box_type = "entity",
+      mode = "any-entity",
+      entity_type_filters = {"cargo-wagon","car","spider-vehicle"},
+    },
+    alt_select = {
+      border_color = {g=1},
+      cursor_box_type = "entity",
+      mode = "any-entity",
+      entity_type_filters = {"cargo-wagon","car","spider-vehicle"},
+    },
+    inventory_move_sound = "__VehicleWagon2__/sound/latchOff.ogg",
+    pick_sound = "__VehicleWagon2__/sound/latchOn.ogg",
+    drop_sound = "__VehicleWagon2__/sound/latchOff.ogg",
     
-    --mouse_cursor = "selection-tool-cursor",
-    selection_color = {r=0.75, g=0.75},
-    alt_selection_color = {g=1},
-    selection_cursor_box_type = "entity",
-    alt_selection_cursor_box_type = "entity",
-    selection_mode = "any-entity",
-    alt_selection_mode = "any-entity",
-    entity_type_filters = {"cargo-wagon","car","spider-vehicle"},
-    alt_entity_type_filters = {"cargo-wagon","car","spider-vehicle"},
-	}
+	},
+  {
+    type = "shortcut",
+    name = "winch-tool",
+    icon = "__VehicleWagon2__/graphics/winch-shortcut.png",
+		icon_size = 64,
+    small_icon = "__VehicleWagon2__/graphics/winch-shortcut.png",
+		small_icon_size = 64,
+    action = "spawn-item",
+    item_to_spawn = "winch-tool",
+    technology_to_unlock = "vehicle-wagons",
+    unavailable_until_unlocked = true,
+    associated_control_input = "winch-tool",
+  },
+  {
+    type = "custom-input",
+    name = "winch-tool",
+    key_sequence = "",
+    action = "spawn-item",
+    item_to_spawn = "winch-tool",
+  }
 }
 
 data:extend{
@@ -44,8 +69,7 @@ data:extend{
 		name = "vehicle-wagon",
 		icon = "__VehicleWagon2__/graphics/tech-icon.png",
 		icon_size = 128,
-    icon_mipmaps = 1,
-		subgroup = "transport",
+    subgroup = "transport",
 		order = "a[train-system]-v[vehicle-wagon]",
 		place_result = "vehicle-wagon",
 		stack_size = 5

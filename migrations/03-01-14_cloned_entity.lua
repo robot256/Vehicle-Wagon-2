@@ -8,22 +8,14 @@
 require("__VehicleWagon2__.script.makeGlobalMaps")
 makeGlobalMaps()
 
-if global.wagon_data then
+if storage.wagon_data then
 
-  -- Version 3.1.14 did not update global.wagon_data[unit_number].wagon = <LuaEntity>
+  -- Version 3.1.14 did not update storage.wagon_data[unit_number].wagon = <LuaEntity>
   --   when cloning entities (during spaceship launching)
-  -- Solution is to look for the new entity based on the new unit_number that was stored correctly
   
-  -- Find all the wagons and sort by unit_number
-  local wagons = {}
-  for _,surface in pairs(game.surfaces) do
-    for _,wagon in pairs(surface.find_entities_filtered{name = global.loadedWagonList}) do
-      wagons[wagon.unit_number] = wagon
-    end
-  end
   -- Store the entity reference for the correct entity based on unit_number
-  for unit_number,data in pairs(global.wagon_data) do
-    data.wagon = wagons[unit_number]
+  for unit_number,data in pairs(storage.wagon_data) do
+    data.wagon = game.get_entity_by_unit_number(unit_number)
   end
   
 end

@@ -4,34 +4,20 @@
  * Description:  Add recipe prototypes.
  *   Recipes added:
  *    - Vehicle Wagon (empty)
- *    - Winch (capsule)
 --]]
 
 
-data:extend({
+data:extend{
 	{
 		type = "recipe",
 		name = "vehicle-wagon",
-		enabled = "false",
+		enabled = false,
 		ingredients =
 		{
-			{"iron-gear-wheel", 10},
-			{"iron-stick", 20},
-			{"steel-plate", 30}
+			{type="item", name="iron-gear-wheel", amount=10},
+			{type="item", name="iron-stick", amount=20},
+			{type="item", name="steel-plate", amount=30}
 		},
-		result = "vehicle-wagon"
+		results = {{type="item", name="vehicle-wagon", amount=1}}
 	},
-	{
-		type = "recipe",
-		name = "winch",
-		enabled = "false",
-		ingredients =
-		{
-			{"engine-unit", 1},
-			{"iron-gear-wheel", 5},
-			{"iron-plate", 5},
-		},
-		result_count = 1,
-		result = "winch"
-	}
-})
+}

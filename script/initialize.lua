@@ -20,13 +20,56 @@ require("script.makeGlobalMaps")
 
 
 function getUnminableStatus()
-  local unminable_enabled = (game.active_mods["unminable-vehicles"]) or (game.active_mods["UnminableVehicles"] and settings.global["unminable_vehicles_make_unminable"].value)
-  if global.unminable_enabled then
-    game.print({"vehicle-wagon2.enabled-unminable-vehicles"})
-  else
-    game.print({"vehicle-wagon2.disabled-unminable-vehicles"})
-  end
+  local unminable_enabled = (script.active_mods["unminable-vehicles"]) or 
+           (script.active_mods["UnminableVehicles"] and settings.global["unminable_vehicles_make_unminable"].value)
   return unminable_enabled
+end
+
+
+function RegisterFilteredEvents()
+
+  --== ON_PRE_PLAYER_MINED_ITEM ==--
+  -- When player mines a loaded wagon, try to unload the vehicle first
+  -- If vehicle cannot be unloaded, give its contents to the player and spill the rest.
+  -- If a loaded vehicle item is mined off the ground, change it to an empty wagon item.
+  -- FILTER = LoadedWagon, ItemOnGround
+  local mined_filters = filterLib.generateNameFilter("item-on-ground", storage.loadedWagonList)
+  script.on_event(defines.events.on_pre_player_mined_item, OnPrePlayerMinedItem, mined_filters)
+
+  --== ON_ROBOT_PRE_MINED ==--
+  -- When robot tries to mine a loaded wagon, try to unload the vehicle first!
+  -- If vehicle cannot be unloaded, send its contents away in the robot piece by piece.
+  -- If a loaded vehicle item is mined off the ground, change it to an empty wagon item.
+  -- FILTER = LoadedWagon, ItemOnGround
+  script.on_event(defines.events.on_robot_pre_mined, OnRobotPreMined, mined_filters)
+
+  
+  --== ON_MARKED_FOR_DECONSTRUCTION ==--
+  -- When a wagon or car is marked for deconstruction, cancel any active loading or unloading orders or player selections
+  local decon_filters = filterLib.generateNameFilter(storage.loadedWagonList, "vehicle-wagon")
+  table.insert(decon_filters, {filter="type", type="car", mode="or"})
+  table.insert(decon_filters, {filter="type", type="spider-vehicle", mode="or"})
+  script.on_event(defines.events.on_marked_for_deconstruction, OnMarkedForDeconstruction, decon_filters)
+  
+  --== ON_OBJECT_DESTROYED ==--
+  -- Fires when registered entities are destroyed, mined, etc.
+  -- We register loaded wagons, and any entity that's in the actions or player_selections queues.
+  script.on_event(defines.events.on_object_destroyed, OnObjectDestroyed)
+
+  --== ON_BUILT_ENTITY ==--
+  --== SCRIPT_RAISED_BUILT ==--
+  -- Detect when loaded wagons are built incorrectly by scripts and convert them to empty wagons.
+  local built_filters = filterLib.generateGhostFilter(storage.loadedWagonList)
+  table.insert(built_filters, {filter="name", name="vehicle-wagon"})
+  script.on_event(defines.events.on_built_entity, OnBuiltEntity, built_filters)
+  script.on_event(defines.events.on_robot_built_entity, OnBuiltEntity, built_filters)
+  script.on_event(defines.events.script_raised_built, OnBuiltEntity, built_filters)
+
+  --== ON_ENTITY_CLONED ==--
+  -- When a loaded wagon is cloned, also clone the data and loaded vehicle entity.
+  local cloned_filters = filterLib.generateNameFilter(storage.loadedWagonList)
+  script.on_event(defines.events.on_entity_cloned, OnEntityCloned, cloned_filters)
+
 end
 
 
@@ -37,12 +80,12 @@ function OnInit()
   -- Create global data tables
   makeGlobalTables()
   -- Check mod and seting state for unminable-ness
-  global.unminable_enabled = getUnminableStatus()
+  storage.unminable_enabled = getUnminableStatus()
 end
 
 
 function OnConfigurationChanged(event)
-log("Entered function OnConfigurationChanged("..serpent.line(event)..")")
+  --log("Entered function OnConfigurationChanged("..serpent.line(event)..")")
   -- Migrations run before on_configuration_changed.
   -- Data structure should already be 2.x.3.
 
@@ -50,15 +93,19 @@ log("Entered function OnConfigurationChanged("..serpent.line(event)..")")
   makeGlobalMaps()
 
   -- Purge data for any entities that were removed
-  -- Migration should already have added "wagon" entity reference to each valid entry
-  for id,data in pairs(global.wagon_data) do
+  -- Migrations should already have added "wagon" and "vehicle" entity references to each valid entry
+  for id,data in pairs(storage.wagon_data) do
     if not data.wagon or not data.wagon.valid then
-      game.print{"vehicle-wagon2.migrate-prototype-error",id,data.name}
-      global.wagon_data[id] = nil
+      log({"vehicle-wagon2.migrate-prototype-error",id,data.name})
+      storage.wagon_data[id] = nil
+    end
+    if not data.vehicle or not data.vehicle.valid then
+      log({"vehicle-wagon2.migrate-vehicle-error",id,data.name})
+      storage.wagon_data[id] = nil
     end
   end
 
-  local gcki_enabled = game.active_mods["GCKI"] and settings.global["vehicle-wagon-use-GCKI-permissions"].value
+  local gcki_enabled = script.active_mods["GCKI"] and settings.global["vehicle-wagon-use-GCKI-permissions"].value
   local unminable_enabled = getUnminableStatus()
 
   -- Run when GCKI is uninstalled:
@@ -66,20 +113,16 @@ log("Entered function OnConfigurationChanged("..serpent.line(event)..")")
     -- Make sure all loaded wagons are minable, if they had been carrying locked GCKI vehicles
     if not unminable_enabled then
       for _,surface in pairs(game.surfaces) do
-        for _,entity in pairs(surface.find_entities_filtered{name=global.loadedWagonList}) do
+        for _,entity in pairs(surface.find_entities_filtered{name=storage.loadedWagonList}) do
           entity.minable = true
         end
       end
     end
     -- Make sure all loaded vehicles are stored as minable, clear GCKI data
-    for id, data in pairs(global.wagon_data) do
-      -- Vehicle had been owned and/or locked, which might make it unminable. If no other mod cares, make it minable again
-      if not unminable_enabled then
-        data.minable = nil
-      end
+    for id, data in pairs(storage.wagon_data) do
       -- Vehicle had been locked, which makes it inoperable. Restore operability
       if data.GCKI_data and data.GCKI_data.locker then
-        data.operable = nil
+        data.operable = true
       end
       -- Keep GCKI data if it contains a custom name and Autodrive is active, but
       -- hasn't stored the custom name
@@ -98,7 +141,7 @@ log("Entered function OnConfigurationChanged("..serpent.line(event)..")")
 
   -- Run when Autodrive is uninstalled:
   if event.mod_changes["autodrive"] and event.mod_changes["autodrive"].new_version == nil then
-    for id, data in pairs(global.wagon_data) do
+    for id, data in pairs(storage.wagon_data) do
       -- Remove Autodrive data unless it contains a custom name and GCKI is active,
       -- but hasn't stored the custom name
       if script.active_mods["GCKI"] and
@@ -113,32 +156,26 @@ log("Entered function OnConfigurationChanged("..serpent.line(event)..")")
   end
 
   -- Run when unminable_enabled status changes due to mods or settings
-  if global.unminable_enabled ~= unminable_enabled then
-    for id, data in pairs(global.wagon_data) do
-      -- Make unminable whenever setting is checked
-      -- Only make minable again if GCKI lock state is not engaged
-      if unminable_enabled then
-        -- Mod forces all loaded vehicles to be unminable
-        data.minable = false
-      elseif not (gcki_enabled and data.GCKI_data and (data.GCKI_data.locker or data.GCKI_data.owner)) then
-        -- Mod no longer forces loaded vehicles to be unminable. If locked vehicle is unlocked and unowned, make it minable.
-        data.minable = nil
-      end
-    end
+  if storage.unminable_enabled ~= unminable_enabled then
     -- Store new value in global
-    global.unminable_enabled = unminable_enabled
+    if unminable_enabled and not storage.unminable_enabled then
+      game.print({"vehicle-wagon2.enabled-unminable-vehicles"})
+    elseif not unminable_enabled and storage.unminable_enabled then
+      game.print({"vehicle-wagon2.disabled-unminable-vehicles"})
+    end
+    storage.unminable_enabled = unminable_enabled
   end
 
 end
 
 function OnRuntimeModSettingChanged(event)
 
-  local gcki_enabled = game.active_mods["GCKI"] and settings.global["vehicle-wagon-use-GCKI-permissions"].value
+  local gcki_enabled = script.active_mods["GCKI"] and settings.global["vehicle-wagon-use-GCKI-permissions"].value
   local unminable_enabled = getUnminableStatus()
 
   -- Reset minable state when GCKI setting changes
   if event.setting == "vehicle-wagon-use-GCKI-permissions" then
-    for id,data in pairs(global.wagon_data) do
+    for id,data in pairs(storage.wagon_data) do
       -- Double-check GCKI-controlled lock state.
       -- Reset all wagons if GCKI permissions are disabled or GCKI is uninstalled.
       -- If UnminableVehicles is enabled, don't set to true
@@ -146,14 +183,12 @@ function OnRuntimeModSettingChanged(event)
         if data.wagon and data.wagon.valid then
           data.wagon.minable = false
         end
-        data.minable = false
       else
         -- GCKI not being respected, if no other unminable mod, then make vehicles minable
         if not unminable_enabled then
           if data.wagon and data.wagon.valid then
             data.wagon.minable = true
           end
-          data.minable = nil
         end
         -- GCKI not being respected, make loaded vehicles operable
         data.operable = nil
@@ -162,18 +197,14 @@ function OnRuntimeModSettingChanged(event)
   end
 
   -- Update loaded vehicle state in response to Unminable Vehicles setting
-  if global.unminable_enabled ~= unminable_enabled then
-    for id, data in pairs(global.wagon_data) do
-      -- Make unminable whenever setting is checked
-      -- Only make minable again if GCKI lock state is not engaged
-      if unminable_enabled then
-        data.minable = false
-      elseif not (gcki_enabled and data.GCKI_data and (data.GCKI_data.locker or data.GCKI_data.owner)) then
-        data.minable = nil
-      end
-    end
+  if storage.unminable_enabled ~= unminable_enabled then
     -- Store new value in global
-    global.unminable_enabled = unminable_enabled
+    if unminable_enabled and not storage.unminable_enabled then
+      game.print({"vehicle-wagon2.enabled-unminable-vehicles"})
+    elseif not unminable_enabled and storage.unminable_enabled then
+      game.print({"vehicle-wagon2.disabled-unminable-vehicles"})
+    end
+    storage.unminable_enabled = unminable_enabled
   end
 
 end

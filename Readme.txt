@@ -1,8 +1,8 @@
-Vehicle Wagon 3.1.22
+Vehicle Wagon 3.1.21
 ===================
 
-Version 3.1.22 was released December 26, 2022, was tested using Factorio v1.1.74, and was authored by robot256 based on the original mod of Supercheese and original graphics from YuokiTani and others.
-Additional contributions from: CrazyMooncat, The_Destroyer, Phasma Felis, Brant Wedel, legendblade, narc, Artanis_Mattias, ST-DDT, PI-C.
+Version 3.1.21 was released November 11, 2021, was tested using Factorio v1.1.1, and was authored by robot256 based on the original mod of Supercheese and original graphics from YuokiTani and others.
+Additional contributions from: CrazyMooncat, The_Destroyer, Phasma Felis, Brant Wedel, legendblade, narc, Artanis_Mattias, ST-DDT.
 
 This mod allows you to load your fully-laden car or tank onto a flatbed train wagon and take it with you on your rail journeys!
 Just use the Winch to haul your vehicle onto the wagon, and use the same Winch to unload it when you're ready to drive away.
@@ -18,31 +18,28 @@ This mod should play well with other tank, car, and spidertron mods, and has bee
 - Better Cargo Planes by Modernkennnern
 - Cargo Ships by schnurrebutz
 - Train & Fuel Overaul by Optera
-- Gizmo's Car Keys (improved)
+- Gizmo's Car Keys (imprved)
 - Space Exploration by Earendel
-- Uncle Shred's Unminable Vehicles
 
 Loaded wagons weigh more than unloaded wagons, in some cases according to what vehicle they load.  To change the weight effects or disable it, use the Mod Startup Settings.
 
-Modded/colored vehicle models will revert to a standard, grey-colored version while riding on the wagon, but after unloading go back to normal.
+Modded/colored vehicle models may appear as a standard, grey-colored version while riding on the wagon, but after unloading go back to normal.
 
-Spidertrons and vehicles that this mod cannot automatically identify will be loaded on the wagon covered in a tarp.
+Vehicles that this mod cannot automatically identify will be loaded on the wagon covered in a tarp.
 
-You also cannot winch vehicles that have a passenger; all players must exit the vehicle or wagon before loading and unloading.
+You also cannot winch vehicles that have a passenger; all players must exit before loading/unloading.
 
-If there is ever a problem unloading a vehicle manually or by mining a wagon, some items may be spilled on the ground nearby.  Normally this only happens if a vehicle inventory or item stack size gets smaller due to another mod change.  Almost never will an item be permanently lost.
-
-Robots can deconstruct loaded wagons by carrying away the contents of loaded vehicles, but only one robot will be sent at a time so it might take a while if the vehicle has lots of contents.
+Robots can deconstruct loaded wagons, which will reveal the vehicle and mark it for deconstruction as well.
 
 Known Issues/Quirks:
 --------------------
 
-If a mod adds a "car" or "spiderton"-type entity that is not meant to be an actual vehicle, it may still be able to be loaded on a Vehicle Wagon under a tarp.
-Specific exceptions have been added for Nixie Tubes, Helicopters, Space Exploration, and others to disallow this, but certain mods may exist that this mod lacks exceptions for.
+If a mod adds a "car"-type entity that is not meant to be an actual vehicle, such as the Nixie Tubes mod (used to; it has changed by now), it may still be able to be loaded on a Vehicle Wagon under a tarp.
+Specific exceptions have been added for Nixie Tubes, Helicopters, and others to disallow this, but certain mods may exist that this mod lacks exceptions for.
 
 For vehicles with multiple of the same weapon type, the ammo is re-inserted in a random order.
 
-Compatibility with AAI Programmable Vehicles is not complete.  You must turn the AI OFF (Red Icon) before loading, or else the AI will not function at all after unloading them.
+Direct compatibility with AAI Programmable Vehicles is unavailable.  AAI does not have code to detect when a vehicle is unloaded (script_raised_destroy), so you cannot use the AI functions after unloading any AAI vehicle.
 
 Credits:
 --------

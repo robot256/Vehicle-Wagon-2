@@ -5,12 +5,14 @@
  --]]
 
 require("config")
-require("data.helpers")
+require("data.vw_helpers")
 
 require("prototypes.beams")
 require("prototypes.items")
 require("prototypes.entities")
+--require("prototypes.loading-ramp")
 require("prototypes.recipes")
 require("prototypes.sounds")
 require("prototypes.technologies")
-require("prototypes.sprites")
+
+require("prototypes.tipsandtricks")

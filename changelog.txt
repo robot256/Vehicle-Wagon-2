@@ -1,4 +1,21 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.0.0
+Date: 2024-10-11
+  Features:
+    - Updated for Factorio 2.0
+    - Made the Winch into a shortcut and custom input.
+    - Added Tips and Tricks simulation for vehicle load/unload operations.
+    - Added support for colored cars and tanks showing their color when loaded on wagons.
+    - Spidertrons can load themselves when instructed to follow an empty vehicle wagon.
+  Changes:
+    - Removed the "hint" console spam in favor of the Tips and Tricks page.
+    - Overhauled vehicle storage to teleport them to a hidden surface instead of deleting the entity.
+    - Perfectly retains equipment grids, quality, and spoilage with no overhead.
+    - Added event filters and object registration for better performance.
+    - Renamed "winch" item to "winch-tool".
+    - Prevent unloading vehicles on elevated rails.
+    - Most console error messages changed to flying text notifications.
+---------------------------------------------------------------------------------------------------
 Version: 3.1.22
 Date: 2022-12-26
   Changes:

@@ -88,6 +88,6 @@ data:extend({
   name = "vehicle-wagon-use-GCKI-permissions",
   order = "cc",
   setting_type = "runtime-global",
-  default_value = "true"
+  default_value = true
   },
 })
