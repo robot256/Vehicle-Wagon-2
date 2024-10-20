@@ -8,13 +8,20 @@
  * Notes: Loading ramps are 3x3 entities. They can only have 1 loading rail and up to 2 unloading rails.
  * 
  * Data structure:
- * storage.loading_ramps: Dict(unit_number) -> {ramp=LuaEntity, chest=LuaEntity, loading_rail=LuaEntity, unloading_rail_index=unit_number, unloading_rails=Array[{rail=LuaEntity, dir_to_rail=defines.direction}]
+ * storage.loading_ramps: Dict[ramp_unit_number]->{ ramp=LuaEntity(ramp),
+                                                    surface_index=ramp_surface_index,
+                                                    chest=LuaEntity(chest),
+                                                    loading_rail=LuaEntity(rail),
+                                                    unloading_rail_index=rail_unit_number,
+                                                    unloading_rails=Dict[rail_unit_number]->{rail=LuaEntity(rail), dir_to_rail=defines.direction}
+                                                  }
  *     --> Stores all the loading ramp entities and their adjacent rails and chests
- * storage.loading_rails: Dict(unit_number) -> Dict(unit_number) -> LuaEntity
+ * storage.loading_rails: Dict[rail_unit_number]->Dict[ramp_unit_number]->LuaEntity(ramp)
  *     --> Stores all the rails that have adjacent loading ramps pointed toward the rail (could be more than one per rail entity)
- * storage.unloading_rails: Dict(unit_number) -> Dict(unit_number) -> LuaEntity
+ * storage.unloading_rails: Dict[rail_unit_number]->Dict[ramp_unit_number]->LuaEntity(ramp)
  *     --> Stores all the rails that have adjacent loading ramps pointed away from the rail (could be more than one ramp per rail entity)
- * storage.active_ramps: Dict(unit_number) -> {ramp=LuaEntity, rail=LuaEntity, train=LuaTrain, wagon=LuaEntity}
+ *
+ * storage.active_ramps: Dict[ramp_unit_number]->{ramp=LuaEntity, rail=LuaEntity, train=LuaTrain, wagon=LuaEntity}
  *     --> Stores all the ramps that are currently active: they have a loading/unloading candidate wagon stopped next to them.
  *         This is the list that gets polled to see when circuit conditions are met or a loadable vehicle comes within range.
  * storage.stopped_trains: Dict(train_id) -> {train=LuaTrain, ramps=Dict(unit_number)->LuaEntity}
@@ -32,6 +39,7 @@
 
 local math2d = require("math2d")
 
+local RAIL_PLACED_NTH_TICK = 96
 
 local DISTANCE_RAMP_TO_RAIL = 2.5
 local DISTANCE_RAIL_TARGET = 2.1
@@ -40,6 +48,8 @@ local DISTANCE_GROUND_TARGET = 0.5
 
 
 function InitLoadingRampData()
+  storage.rail_placed_queues = {}
+  storage.ramps_by_surface = {}
   storage.loading_ramps = {}
   storage.loading_rails = {}
   storage.unloading_rails = {}
@@ -105,7 +115,7 @@ local function addRailToRamp(ramp, rail)
     dir_to_rail = defines.direction.west
   else
     -- rail is not adjacent to ramp at all
-    game.print("["..tostring(ramp_unit_number).."] Could not add rail at vector "..util.positiontostr(vec_to_rail))
+    game.print("["..tostring(ramp_unit_number).."] Could not add rail "..tostring(rail_unit_number).." at vector "..util.positiontostr(vec_to_rail))
     return false
   end
   
@@ -115,7 +125,7 @@ local function addRailToRamp(ramp, rail)
   if dir_to_rail == ramp.direction then
     -- This ramp is loading this rail
     ramp_entry.loading_rail = rail
-    game.print("["..tostring(ramp_unit_number).."] Adding loading rail to the "..helpers.direction_to_string(dir_to_rail).." at vector "..util.positiontostr(vec_to_rail))
+    game.print("["..tostring(ramp_unit_number).."] Adding loading rail "..tostring(rail_unit_number).." to the "..helpers.direction_to_string(dir_to_rail).." at vector "..util.positiontostr(vec_to_rail))
     -- Add to list of rails also
     storage.loading_rails[rail_unit_number] = storage.loading_rails[rail_unit_number] or {}
     storage.loading_rails[rail_unit_number][ramp_unit_number] = ramp
@@ -123,7 +133,7 @@ local function addRailToRamp(ramp, rail)
     -- This ramp is unloading this rail
     ramp_entry.unloading_rails = ramp_entry.unloading_rails or {}
     ramp_entry.unloading_rails[rail_unit_number] = {rail=rail, dir_to_rail=dir_to_rail}
-    game.print("["..tostring(ramp_unit_number).."] Adding unloading rail to the "..helpers.direction_to_string(dir_to_rail).." at vector "..util.positiontostr(vec_to_rail))
+    game.print("["..tostring(ramp_unit_number).."] Adding unloading rail "..tostring(rail_unit_number).." to the "..helpers.direction_to_string(dir_to_rail).." at vector "..util.positiontostr(vec_to_rail))
     -- Add to list of rails also
     storage.unloading_rails[rail_unit_number] = storage.unloading_rails[rail_unit_number] or {}
     storage.unloading_rails[rail_unit_number][ramp_unit_number] = ramp
@@ -160,19 +170,21 @@ function OnRampRotatedOrFlipped(event)
   local ramp_unit_number = ramp.unit_number
   local ramp_entry = storage.loading_ramps[ramp_unit_number]
   
-  -- Check if we're allowed to rotate yet
+  -- Check if we're allowed to rotate yet, or if we need to cycle through the different unloading rails first
   if event.name == defines.events.on_player_rotated_entity then
     -- If we are an unloading ramp and not at the end of the unloading_rails list, then can't rotate
     if ramp_entry.unloading_rail_index and next(ramp_entry.unloading_rails, ramp_entry.unloading_rail_index) then
+      -- Set the unloading rail to the next one in the list
       ramp_entry.unloading_rail_index = next(ramp_entry.unloading_rails, ramp_entry.unloading_rail_index)
+      -- Undo the rotation done by the player
       ramp.direction = old_ramp_dir
-      -- Didn't rotate, but did 
+      -- Didn't rotate, but did change the unloading rail
       setRampVectors(ramp)
       return
     end
   end
   
-  
+  -- Now we are allowed to process the rotation normally
   local new_loading_rail
   local new_unloading_rails = {}
   
@@ -211,7 +223,7 @@ function OnRampRotatedOrFlipped(event)
     end
   end
   
-  -- Overwrite the ramp entry with the rearranged lists of rails
+  -- Overwrite the ramp entry with the rearranged lists of rails, and reset the unloading rail index
   ramp_entry.loading_rail = new_loading_rail
   ramp_entry.unloading_rails = new_unloading_rails
   ramp_entry.unloading_rail_index = nil
@@ -221,6 +233,82 @@ function OnRampRotatedOrFlipped(event)
 end
 script.on_event({defines.events.on_player_rotated_entity, defines.events.on_player_flipped_entity}, OnRampRotatedOrFlipped)
 
+
+local function ProcessRailPlacedQueue(event)
+  for surface_index, queue in pairs(storage.rail_placed_queues) do
+    if next(queue) then
+      -- Rails were placed on this surface
+      -- See if it's faster to loop over the rails or over the ramps
+      local num_ramps = table_size(storage.ramps_by_surface[surface_index])
+      local num_rails = #queue
+      local surface = game.surfaces[surface_index]
+      
+      
+      if num_ramps < num_rails then
+        local queue_map = {}
+        for _,newrail in pairs(queue) do
+          queue_map[newrail.unit_number] = true
+        end
+        
+        game.print("Checking queue per ramp")
+        -- Check the area around every ramp on this surface
+        for ramp_unit_number, ramp in pairs(storage.ramps_by_surface[surface_index]) do
+          local rails = surface.find_entities_filtered{
+            type = {"straight-rail", "legacy-straight-rail"},
+            area = math2d.bounding_box.create_from_centre(ramp.position, 2*DISTANCE_RAMP_TO_RAIL)
+          }
+          local ramp_entry = storage.loading_ramps[ramp_unit_number]
+          local changed = false
+          for _,rail in pairs(rails) do
+            if queue_map[rail.unit_number] then
+              -- It is a new one, add it to the ramp and go to the next found rail
+              game.print("Found new rail "..tostring(rail.unit_number).." near ramp "..tostring(ramp_unit_number))
+              changed = addRailToRamp(ramp, rail) or changed
+            end
+          end
+          if changed then
+            setRampVectors(ramp)
+          end
+        end
+      else
+        game.print("Checking queue per rail")
+        -- Check the area around every rail in the queue
+        for _,newrail in pairs(queue) do
+          local ramps = surface.find_entities_filtered{
+            name = "loading-ramp",
+            area = math2d.bounding_box.create_from_centre(newrail.position, 4)
+          }
+          for _,ramp in pairs(ramps) do
+            if addRailToRamp(ramp, newrail) then
+              setRampVectors(ramp)
+            end
+          end
+        end
+      end
+      storage.rail_placed_queues[surface_index] = {}
+    end
+  end
+  -- Disable event after we deal with everything
+  script.on_nth_tick(RAIL_PLACED_NTH_TICK, nil)
+end
+
+-- Update the event when we load the game
+function RegisterRailPlacedNthTick()
+  local empty = true
+  if storage.rail_placed_queues then
+    for surface_index, queue in pairs(storage.rail_placed_queues) do
+      if next(queue) then
+        empty = false
+        break
+      end
+    end
+  end
+  if not empty then
+    script.on_nth_tick(RAIL_PLACED_NTH_TICK, ProcessRailPlacedQueue)
+  else
+    script.on_nth_tick(RAIL_PLACED_NTH_TICK, nil)
+  end
+end
 
 function OnRampOrStraightRailCreated(event)
   local entity = event.entity
@@ -232,10 +320,18 @@ function OnRampOrStraightRailCreated(event)
   if entity.name == "loading-ramp" then
     local ramp = entity
     -- Create the entry for this ramp
+    
+    -- Temporary migration creations
     storage.loading_rails = storage.loading_rails or {}
     storage.unloading_rails = storage.unloading_rails or {}
     storage.loading_ramps = storage.loading_ramps or {}
-    storage.loading_ramps[unit_number] = {ramp=ramp}
+    storage.rail_placed_queues = storage.rail_placed_queues or {}
+    storage.ramps_by_surface = storage.ramps_by_surface or {}
+    
+    storage.loading_ramps[unit_number] = {ramp=ramp, surface_index=surface_index}
+    storage.ramps_by_surface[surface_index] = storage.ramps_by_surface[surface_index] or {}
+    storage.ramps_by_surface[surface_index][unit_number] = ramp
+    storage.rail_placed_queues[surface_index] = {}
     
     -- Find nearby straight rails, if any, and establish if this is a loading, unloading, or detached ramp
     local rails = surface.find_entities_filtered{type={"straight-rail", "legacy-straight-rail"}, area=math2d.bounding_box.create_from_centre(position, 2*DISTANCE_RAMP_TO_RAIL)}
@@ -256,43 +352,13 @@ function OnRampOrStraightRailCreated(event)
       
     end
     
-    
-  -- elseif entity.type == "straight-rail" or entity.type == "legacy-straight-rail" then
-    -- -- See if there are any loading ramps on either side of this rail
-    -- -- Rail direction can only be north {0,-1} or east {1,0}
-    -- -- Instead of searching the surface for every single rail placed, look through our lists of ramps on this surface only
-    -- local ramp_pos1, ramp_pos2
-    -- if direction == defines.direction.north then
-      -- ramp_pos1 = {x=position.x-2, y=position.y}
-      -- ramp_pos2 = {x=position.x+2, y=position.y}
-    -- else
-      -- ramp_pos1 = {x=position.x, y=position.y-2}
-      -- ramp_pos2 = {x=position.x, y=position.y+2}
-    -- end
-    -- if storage.loading_ramps[surface_index] then
-      -- for uid,data in pairs(storage.loading_ramps[surface_index]) do
-        -- local ramp = data.ramp
-        -- local ramp_pos = ramp.position
-        -- if (ramp_pos.x == ramp_pos1.x and ramp_pos.y == ramp_pos1.y) or
-           -- (ramp_pos.x == ramp_pos2.x and ramp_pos.y == ramp_pos2.y) then
-          -- -- This ramp is adjacent to this rail
-          -- -- Add it to the ramp's lists of rails
-          
-        -- end
-      -- end
-    -- end
-    -- if storage.detached_ramps[surface_index] then
-      -- for uid,ramp in pairs(storage.detached_ramps[surface_index]) do
-        -- local ramp_pos = ramp.position
-        -- if (ramp_pos.x == ramp_pos1.x and ramp_pos.y == ramp_pos1.y) or
-           -- (ramp_pos.x == ramp_pos2.x and ramp_pos.y == ramp_pos2.y) then
-          -- -- This ramp is adjacent to this rail
-          -- -- Add it to the ramp's lists of rails
-          
-        -- end
-      -- end
-    -- end
-    
+  elseif entity.type == "straight-rail" or entity.type == "legacy-straight-rail" then
+    -- If there are any ramps on this surface, add it to the queue of rails on that surface to check later
+    if storage.ramps_by_surface[entity.surface.index] then
+      table.insert(storage.rail_placed_queues[entity.surface.index], entity)
+      -- Enable the delayed check of rails
+      script.on_nth_tick(RAIL_PLACED_NTH_TICK, ProcessRailPlacedQueue)
+    end
   end
 end
 
@@ -300,15 +366,14 @@ end
 function OnLoadingRampOrRailDestroyed(event)
   if event.type == defines.target_type.entity then
     local unit_number = event.useful_id
-    -- Purge this ramp from all the lists
     -- First check if it's a loading ramp
     local ramp_entry = storage.loading_ramps[unit_number]
-    --log("Deleting ramp:")
-    --log(serpent.block(ramp_entry))
     if ramp_entry then
+      -- Destroy the dummy chest
       if ramp_entry.chest then
         ramp_entry.chest.destroy()
       end
+      -- Unlink the loading rail, if any
       if ramp_entry.loading_rail then
         local rid = ramp_entry.loading_rail.unit_number
         storage.loading_rails[rid][unit_number] = nil
@@ -316,6 +381,7 @@ function OnLoadingRampOrRailDestroyed(event)
           storage.loading_rails[rid] = nil
         end
       end
+      -- Unlink the unloading rails, if any
       if ramp_entry.unloading_rails then
         for rail_id,_ in pairs(ramp_entry.unloading_rails) do
           storage.unloading_rails[rail_id][unit_number] = nil
@@ -324,6 +390,16 @@ function OnLoadingRampOrRailDestroyed(event)
           end
         end
       end
+      -- Remove from surface index (used to check newly placed rails)
+      storage.ramps_by_surface[ramp_entry.surface_index][unit_number] = nil
+      if not next(storage.ramps_by_surface[ramp_entry.surface_index]) then
+        storage.ramps_by_surface[ramp_entry.surface_index] = nil
+        storage.rail_placed_queues[ramp_entry.surface_index] = nil
+      end
+      -- TODO: Remove from active trains
+      
+      
+      -- Remove entry from global table
       storage.loading_ramps[unit_number] = nil
       return true
     
