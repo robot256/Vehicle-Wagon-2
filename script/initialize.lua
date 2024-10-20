@@ -75,6 +75,9 @@ function RegisterFilteredEvents()
   table.insert(cloned_filters, {filter="type", type="straight-rail"})
   table.insert(cloned_filters, {filter="type", type="legacy-straight-rail"})
   script.on_event(defines.events.on_entity_cloned, OnEntityCloned, cloned_filters)
+  
+  -- On_Nth_Tick for Loading Ramp rail placement update
+  RegisterRailPlacedNthTick()
 
 end
 
