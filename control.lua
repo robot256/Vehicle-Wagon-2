@@ -40,6 +40,8 @@ require("script.migrateLoadedWagon")
 require("script.initialize")
 require("script.OnPrePlayerMinedItem")
 require("script.OnRobotPreMined")
+-- Experimental:
+require("script.loadingRamp")
 
 --== ON_INIT ==--
 -- Initialize global data tables
@@ -488,6 +490,9 @@ function OnBuiltEntity(event)
   elseif entity.name == "vehicle-wagon" then
     -- Prevent player from opening shadow inventory
     entity.operable = false
+  else
+    -- Loading ramp handler
+    OnRampOrStraightRailCreated(event)
   end
 end
 
@@ -546,7 +551,10 @@ function OnObjectDestroyed(event)
       end
     end
     deleteWagon(unit_number)
-  else
+  
+  -- See if it's a loading ramp
+  elseif not OnLoadingRampOrRailDestroyed(event) then
+    -- Not a loading ramp/rail
     -- Don't know if it was a car or a wagon, so try both.  These lists are pretty short.
     clearWagon(unit_number)
     clearVehicle(unit_number, {silent=true})
@@ -582,6 +590,8 @@ function OnEntityCloned(event)
       -- Register the cloned wagon for destruction event
       script.register_on_object_destroyed(destination)
     end
+  else
+    OnRampOrStraightRailCreated(event)
   end
 end
 
