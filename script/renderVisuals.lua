@@ -367,6 +367,7 @@ end
 
 function clearIcon(wagon_data)
   -- Remove icon from vehicle by destroying the render objects
+  if not wagon_data.icon then return end
   for _,object in pairs(wagon_data.icon) do
     -- Support legacy structures where rendering items were referenced only by id
     if type(object) == "number" then
