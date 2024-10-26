@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.0.2
+Date: 2024-10-25
+  Features:
+    - Added new startup setting to configure the Vehicle Wagon inventory slots. Can be set to "None", "Full only", or "Full and empty". Defaults to None for backwards compatibility.
+  Changes:
+    - Changed loading procedure so that when inserting the dummy item fails (because inventory size is 0), it draws the sprite icon instead.
+    - Added migration code in on_configuration_changed to update the icon/dummy item state every time the inventory-slots setting is changed.
+    - Removed unused runtime setting "Allow robots to unload vehicles". This is always enabled now.
+---------------------------------------------------------------------------------------------------
 Version: 4.0.1
 Date: 2024-10-14
   Bugfixes:

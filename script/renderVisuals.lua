@@ -336,3 +336,45 @@ function renderUnloadingRamp(wagon, position, vehicle_radius)
     return nil
   end
 end
+
+function renderIcon(target, contents)
+  -- Check that target entity exists, and contents entity/icon is loaded in the game.
+  if target and prototypes.entity[contents] then
+    -- Create icon showing contents (will be deleted automatically when wagon is destroyed or unloaded)
+    local visuals = {
+      rendering.draw_sprite{
+        sprite="vw2-bg-icon",
+        x_scale=1.6,
+        y_scale=1.6,
+        render_layer="entity-info-icon",
+        target={entity=target, offset={0,BED_CENTER_OFFSET}},
+        surface=target.surface,
+        only_in_alt_mode=true
+      },
+      rendering.draw_sprite{
+        sprite="entity."..contents,
+        x_scale=1.2,
+        y_scale=1.2,
+        render_layer="entity-info-icon",
+        target={entity=target, offset={0,BED_CENTER_OFFSET}},
+        surface=target.surface,
+        only_in_alt_mode=true
+      }
+    }
+    return visuals
+  end
+end
+
+function clearIcon(wagon_data)
+  -- Remove icon from vehicle by destroying the render objects
+  for _,object in pairs(wagon_data.icon) do
+    -- Support legacy structures where rendering items were referenced only by id
+    if type(object) == "number" then
+      object = rendering.get_object_by_id(object)
+    end
+    if object and object.valid then
+      object.destroy()
+    end
+  end
+  wagon_data.icon = nil
+end

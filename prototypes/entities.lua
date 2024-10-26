@@ -18,7 +18,11 @@ local vehicle_wagon = util.table.deepcopy(data.raw["cargo-wagon"]["cargo-wagon"]
 vehicle_wagon.name = "vehicle-wagon"
 vehicle_wagon.icon = "__VehicleWagon2__/graphics/vehicle-wagon-icon.png"
 vehicle_wagon.icon_size = 32
-vehicle_wagon.inventory_size = 1
+if settings.startup["vehicle-wagon-inventory-slots"].value == "none" then
+  vehicle_wagon.inventory_size = 0
+else
+  vehicle_wagon.inventory_size = 1
+end
 table.insert(vehicle_wagon.flags, "no-automated-item-removal")
 table.insert(vehicle_wagon.flags, "no-automated-item-insertion")
 vehicle_wagon.minable = {mining_time = 1, result = "vehicle-wagon"}

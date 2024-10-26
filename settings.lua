@@ -6,16 +6,21 @@
 
 data:extend({
   {
-    type = "bool-setting",
-    name = "vehicle-wagon-allow-robot-unloading",
+    type = "string-setting",
+    name = "vehicle-wagon-inventory-slots",
     order = "aa",
-    setting_type = "runtime-global",
-    default_value = false,
+    setting_type = "startup",
+    default_value = "none",
+    allowed_values = {
+      "full-and-empty",
+      "full-only",
+      "none",
+    },
   },
   {
     type = "bool-setting",
     name = "vehicle-wagon-compatibility-entities",
-    order = "aa",
+    order = "ab",
     setting_type = "startup",
     default_value = false,
   },

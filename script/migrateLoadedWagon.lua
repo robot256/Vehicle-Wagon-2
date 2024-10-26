@@ -10,7 +10,7 @@
  *    5. If unsuccessful, return nil.
  *    1. Replace Loaded Vehicle Wagon with Vehicle Wagon.
  --]]
-
+require("__VehicleWagon2__.script.renderVisuals")
 
 -------------------------
 -- Migrate Loaded Wagon
@@ -66,7 +66,12 @@ function migrateLoadedWagon(loaded_unit_number)
   local wagon_inv = loaded_wagon.get_inventory(defines.inventory.cargo_wagon)
   if wagon_inv then
     wagon_inv.clear()
-    wagon_inv.insert({name=wagon_data.name, count=1})
+    if wagon_inv.insert({name=wagon_data.name, count=1}) == 1 then
+      -- Inserted vehicle item, delete the old icon
+      if wagon_data.icon then
+        clearIcon(wagon_data)
+      end
+    end
   end
   
   -- Set vehicle user to the player who unloaded, or the saved last user if unloaded automatically

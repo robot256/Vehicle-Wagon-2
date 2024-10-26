@@ -165,6 +165,21 @@ function OnConfigurationChanged(event)
     end
     storage.unminable_enabled = unminable_enabled
   end
+  
+  -- Run when inventory slots setting Changes
+  local new_slots_setting = settings.startup["vehicle-wagon-inventory-slots"].value
+  if not storage.slots_setting or new_slots_setting ~= storage.slots_setting then
+    -- Go through and make sure everything has the right icons and inventory contents
+    for uid,wagon_data in pairs(storage.wagon_data) do
+      clearIcon(wagon_data)
+      -- Make sure it has the right contents
+      if wagon_data.wagon.insert({name=wagon_data.vehicle.name, count=1, quality=wagon_data.vehicle.quality}) ~= 1 then
+        -- Put an icon on the wagon showing contents
+        wagon_data.icon = renderIcon(wagon_data.wagon, wagon_data.vehicle.name)
+      end
+    end
+    storage.slots_setting = new_slots_setting
+  end
 
 end
 
