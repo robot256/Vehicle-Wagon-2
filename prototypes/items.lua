@@ -19,7 +19,7 @@ data:extend{
   {
 		type = "selection-tool",
 		name = "winch-tool",
-		icon = "__VehicleWagon2__/graphics/winch-icon.png",
+		icon = "__vehicle-wagon-graphics__/graphics/winch-icon.png",
 		icon_size = 64,
     stack_size = 1,
     flags = {"only-in-cursor", "not-stackable", "spawnable"},
@@ -44,9 +44,9 @@ data:extend{
   {
     type = "shortcut",
     name = "winch-tool",
-    icon = "__VehicleWagon2__/graphics/winch-shortcut.png",
+    icon = "__vehicle-wagon-graphics__/graphics/winch-shortcut.png",
 		icon_size = 64,
-    small_icon = "__VehicleWagon2__/graphics/winch-shortcut.png",
+    small_icon = "__vehicle-wagon-graphics__/graphics/winch-shortcut.png",
 		small_icon_size = 64,
     action = "spawn-item",
     item_to_spawn = "winch-tool",
@@ -67,7 +67,7 @@ data:extend{
 	{
 		type = "item-with-entity-data",
 		name = "vehicle-wagon",
-		icon = "__VehicleWagon2__/graphics/tech-icon.png",
+		icon = "__vehicle-wagon-graphics__/graphics/tech-icon.png",
 		icon_size = 128,
     subgroup = "transport",
 		order = "a[train-system]-v[vehicle-wagon]",

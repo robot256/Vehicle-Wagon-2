@@ -9,6 +9,3 @@ slopefun
 .bat
 .exe
 .gitattributes
-vehicle-wagon-graphics
-.zip
-temp

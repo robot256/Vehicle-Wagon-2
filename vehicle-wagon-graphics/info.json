@@ -1,0 +1,13 @@
+{
+    "name": "vehicle-wagon-graphics",
+    "version": "1.0.0",
+    "factorio_version": "2.0",
+    "title": "Vehicle Wagon Graphics",
+    "author": "robot256",
+    "homepage": "",
+    "contact": "https://forums.factorio.com/memberlist.php?mode=viewprofile&u=63685",
+    "dependencies": [
+      "base"
+    ],
+    "description": "Graphics library for VehicleWagon2"
+}

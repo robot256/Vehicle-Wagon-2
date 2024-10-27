@@ -37,7 +37,7 @@ data:extend{
         render_layer = "transport-belt",
         head =
         {
-          filename = "__VehicleWagon2__/graphics/ramp/loading-ramp-head.png",
+          filename = "__vehicle-wagon-graphics__/graphics/ramp/loading-ramp-head.png",
           flags = beam_non_light_flags,
           line_length = 16,
           width = 32,
@@ -49,7 +49,7 @@ data:extend{
         },
         tail =
         {
-          filename = "__VehicleWagon2__/graphics/ramp/loading-ramp-tail.png",
+          filename = "__vehicle-wagon-graphics__/graphics/ramp/loading-ramp-tail.png",
           flags = beam_non_light_flags,
           line_length = 16,
           width = 32,
@@ -63,7 +63,7 @@ data:extend{
         body =
         {
           {
-            filename = "__VehicleWagon2__/graphics/ramp/loading-ramp-body.png",
+            filename = "__vehicle-wagon-graphics__/graphics/ramp/loading-ramp-body.png",
             flags = beam_non_light_flags,
             line_length = 16,
             width = 32,
@@ -107,7 +107,7 @@ data:extend{
         render_layer = "transport-belt",
         head =
         {
-          filename = "__VehicleWagon2__/graphics/ramp/unloading-ramp-head.png",
+          filename = "__vehicle-wagon-graphics__/graphics/ramp/unloading-ramp-head.png",
           flags = beam_non_light_flags,
           line_length = 16,
           width = 32,
@@ -119,7 +119,7 @@ data:extend{
         },
         tail =
         {
-          filename = "__VehicleWagon2__/graphics/ramp/unloading-ramp-tail.png",
+          filename = "__vehicle-wagon-graphics__/graphics/ramp/unloading-ramp-tail.png",
           flags = beam_non_light_flags,
           line_length = 16,
           width = 32,
@@ -133,7 +133,7 @@ data:extend{
         body =
         {
           {
-            filename = "__VehicleWagon2__/graphics/ramp/unloading-ramp-body.png",
+            filename = "__vehicle-wagon-graphics__/graphics/ramp/unloading-ramp-body.png",
             flags = beam_non_light_flags,
             line_length = 16,
             width = 32,

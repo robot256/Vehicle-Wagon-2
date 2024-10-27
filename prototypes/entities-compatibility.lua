@@ -38,8 +38,8 @@ if mods["bigtruck"] or compatibilityEntities then
             direction_count = 128,
             filenames =
             {
-              "__VehicleWagon2__/graphics/cargo_fb_sheet.png",
-              "__VehicleWagon2__/graphics/cargo_fb_sheet.png"
+              "__vehicle-wagon-graphics__/graphics/cargo_fb_sheet.png",
+              "__vehicle-wagon-graphics__/graphics/cargo_fb_sheet.png"
             },
             line_length = 8,
             lines_per_file = 8,
@@ -54,10 +54,10 @@ if mods["bigtruck"] or compatibilityEntities then
             scale = 0.95,
             filenames =
             {
-              "__VehicleWagon2__/graphics/truck/truck-shadow-1.png",
-              "__VehicleWagon2__/graphics/truck/truck-shadow-2.png",
-              "__VehicleWagon2__/graphics/truck/truck-shadow-3.png",
-              "__VehicleWagon2__/graphics/truck/truck-shadow-4.png"
+              "__vehicle-wagon-graphics__/graphics/truck/truck-shadow-1.png",
+              "__vehicle-wagon-graphics__/graphics/truck/truck-shadow-2.png",
+              "__vehicle-wagon-graphics__/graphics/truck/truck-shadow-3.png",
+              "__vehicle-wagon-graphics__/graphics/truck/truck-shadow-4.png"
             },
             line_length = 8,
             lines_per_file = 5,
@@ -71,10 +71,10 @@ if mods["bigtruck"] or compatibilityEntities then
             scale = 0.95,
             filenames =
             {
-              "__VehicleWagon2__/graphics/truck/truck-1.png",
-              "__VehicleWagon2__/graphics/truck/truck-2.png",
-              "__VehicleWagon2__/graphics/truck/truck-3.png",
-              "__VehicleWagon2__/graphics/truck/truck-4.png"
+              "__vehicle-wagon-graphics__/graphics/truck/truck-1.png",
+              "__vehicle-wagon-graphics__/graphics/truck/truck-2.png",
+              "__vehicle-wagon-graphics__/graphics/truck/truck-3.png",
+              "__vehicle-wagon-graphics__/graphics/truck/truck-4.png"
             },
             line_length = 8,
             lines_per_file = 5,
@@ -104,8 +104,8 @@ if mods["Aircraft"] or compatibilityEntities then
             direction_count = 128,
             filenames =
             {
-              "__VehicleWagon2__/graphics/cargoplane/flyer3onr_sheet-0.png",
-              "__VehicleWagon2__/graphics/cargoplane/flyer3onr_sheet-1.png"
+              "__vehicle-wagon-graphics__/graphics/cargoplane/flyer3onr_sheet-0.png",
+              "__vehicle-wagon-graphics__/graphics/cargoplane/flyer3onr_sheet-1.png"
             },
             line_length = 8,
             lines_per_file = 8,
@@ -132,8 +132,8 @@ if mods["Aircraft"] or compatibilityEntities then
             direction_count = 128,
             filenames =
             {
-              "__VehicleWagon2__/graphics/jet/flyer2onr_sheet-0.png",
-              "__VehicleWagon2__/graphics/jet/flyer2onr_sheet-1.png"
+              "__vehicle-wagon-graphics__/graphics/jet/flyer2onr_sheet-0.png",
+              "__vehicle-wagon-graphics__/graphics/jet/flyer2onr_sheet-1.png"
             },
             line_length = 8,
             lines_per_file = 8,
@@ -160,8 +160,8 @@ if mods["Aircraft"] or compatibilityEntities then
             direction_count = 128,
             filenames =
             {
-              "__VehicleWagon2__/graphics/gunship/flyer1onr_sheet-0b.png",
-              "__VehicleWagon2__/graphics/gunship/flyer1onr_sheet-1b.png"
+              "__vehicle-wagon-graphics__/graphics/gunship/flyer1onr_sheet-0b.png",
+              "__vehicle-wagon-graphics__/graphics/gunship/flyer1onr_sheet-1b.png"
             },
             line_length = 8,
             lines_per_file = 8,
@@ -240,8 +240,8 @@ if mods["Krastorio2"] then
             direction_count = 128,
             filenames =
             {
-              "__VehicleWagon2__/graphics/cargo_fb_sheet.png",
-              "__VehicleWagon2__/graphics/cargo_fb_sheet.png"
+              "__vehicle-wagon-graphics__/graphics/cargo_fb_sheet.png",
+              "__vehicle-wagon-graphics__/graphics/cargo_fb_sheet.png"
             },
             line_length = 8,
             lines_per_file = 8,

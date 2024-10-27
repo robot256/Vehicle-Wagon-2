@@ -58,7 +58,7 @@ data:extend{
   {
 		type = "item",
 		name = "loading-ramp",
-		icon = "__VehicleWagon2__/graphics/tech-icon.png",
+		icon = "__vehicle-wagon-graphics__/graphics/tech-icon.png",
 		icon_size = 128,
     subgroup = "transport",
 		order = "a[train-system]-w[loading-ramp]",
