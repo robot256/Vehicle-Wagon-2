@@ -42,6 +42,7 @@ require("script.OnPrePlayerMinedItem")
 require("script.OnRobotPreMined")
 -- Experimental:
 require("script.loadingRamp")
+require("script.autoloading")
 
 --== ON_INIT ==--
 -- Initialize global data tables
@@ -63,7 +64,8 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, OnRuntimeModSetti
 
 function updateOnTickStatus(enable)
   if enable or (storage.action_queue and table_size(storage.action_queue) > 0) or
-     (storage.player_selection and table_size(storage.player_selection) > 0) then
+     (storage.player_selection and table_size(storage.player_selection) > 0) or
+     (storage.active_ramps and table_size(storage.active_ramps) > 0) then
     script.on_event(defines.events.on_tick, process_tick)
   else
     script.on_event(defines.events.on_tick, nil)
@@ -204,6 +206,9 @@ function process_tick(event)
       storage.action_queue[unit_number] = nil
     end
   end
+  
+  -- Check Active Loading Ramp queue
+  ProcessActiveRamps()
 
   -- Unsubscribe from on_tick if no actions remains in queue
   updateOnTickStatus()
@@ -503,61 +508,67 @@ end
 -- This will work for loaded wagons because all we have to do is destroy the loaded vehicle.
 -- REGISTER = Every LoadedWagon when created, and Any (EmptyWagon, Car, Spidertron) when it becomes part of a loading/unloading operation
 function OnObjectDestroyed(event)
-  local unit_number = event.useful_id
-  if storage.wagon_data[unit_number] then
-    -- Loaded wagon died, its vehicle is unrecoverable (if it wasn't already cloned)
-    -- Also clear selection data for this wagon
-    if storage.wagon_data[unit_number].cloned then
-      -- This entity was cloned, probably by Space Exploration, so we don't need to make a message about it
-      storage.wagon_data[unit_number].cloned = nil
-    else
-      -- Entity not cloned, so the vehicle was lost
-      local vehicle_name = storage.wagon_data[unit_number].name
-      if prototypes.entity[vehicle_name] then
-        game.print{"vehicle-wagon2.wagon-destroyed", "#"..unit_number.." ", prototypes.entity[vehicle_name].localised_name}
+  if event.type == defines.target_type.entity then
+    local unit_number = event.useful_id
+    if storage.wagon_data[unit_number] then
+      -- Loaded wagon died, its vehicle is unrecoverable (if it wasn't already cloned)
+      -- Also clear selection data for this wagon
+      if storage.wagon_data[unit_number].cloned then
+        -- This entity was cloned, probably by Space Exploration, so we don't need to make a message about it
+        storage.wagon_data[unit_number].cloned = nil
       else
-        game.print{"vehicle-wagon2.wagon-destroyed", "#"..unit_number.." ", vehicle_name}
+        -- Entity not cloned, so the vehicle was lost
+        local vehicle_name = storage.wagon_data[unit_number].name
+        if prototypes.entity[vehicle_name] then
+          game.print{"vehicle-wagon2.wagon-destroyed", "#"..unit_number.." ", prototypes.entity[vehicle_name].localised_name}
+        else
+          game.print{"vehicle-wagon2.wagon-destroyed", "#"..unit_number.." ", vehicle_name}
+        end
+
+        -- As of version 1.1.2/1.1.3, GCKI and Autodrive will allow players to add a
+        -- custom name to vehicles, the prototype is used by the respective mod or not.
+        -- When a vehicle is loaded on a vehicle wagon, the custom name will be
+        -- reserved until the vehicle is unloaded again. When the vehicle wagon is
+        -- destroyed before it could be unloaded, GCKI and Autodrive should remove the
+        -- name from its list, so it can be used again for another vehicle.
+        --log("storage.wagon_data["..entity.unit_number.."]: "..serpent.line(storage.wagon_data[entity.unit_number]))
+        --log("remote.interfaces[\"autodrive\"]: "..serpent.block(remote.interfaces["autodrive"]))
+        if storage.wagon_data[unit_number].autodrive_data and
+            remote.interfaces["autodrive"] and
+            remote.interfaces["autodrive"].vehicle_proxy_destroyed then
+
+          log("Vehicle wagon loaded with an Autodrive vehicle was destroyed. Calling remote.interfaces[\"autodrive\"].vehicle_proxy_destroyed()!")
+          remote.call("autodrive", "vehicle_proxy_destroyed", {
+            autodrive_data = storage.wagon_data[unit_number].autodrive_data,
+            mod_name = script.mod_name,
+          })
+
+        -- If Autodrive is active, it will inform GCKI that the name should be removed,
+        -- so we can skip the call to GCKI!
+        elseif storage.wagon_data[unit_number].GCKI_data and
+            remote.interfaces["GCKI"] and
+            remote.interfaces["GCKI"].vehicle_proxy_destroyed then
+
+          log("Vehicle wagon loaded with a GCKI_vehicle was destroyed. Calling remote.interfaces[\"GCKI\"].vehicle_proxy_destroyed()!")
+          remote.call("GCKI", "vehicle_proxy_destroyed", {
+            GCKI_data = storage.wagon_data[unit_number].GCKI_data,
+            mod_name = script.mod_name,
+          })
+        end
       end
-
-      -- As of version 1.1.2/1.1.3, GCKI and Autodrive will allow players to add a
-      -- custom name to vehicles, the prototype is used by the respective mod or not.
-      -- When a vehicle is loaded on a vehicle wagon, the custom name will be
-      -- reserved until the vehicle is unloaded again. When the vehicle wagon is
-      -- destroyed before it could be unloaded, GCKI and Autodrive should remove the
-      -- name from its list, so it can be used again for another vehicle.
-      --log("storage.wagon_data["..entity.unit_number.."]: "..serpent.line(storage.wagon_data[entity.unit_number]))
-      --log("remote.interfaces[\"autodrive\"]: "..serpent.block(remote.interfaces["autodrive"]))
-      if storage.wagon_data[unit_number].autodrive_data and
-          remote.interfaces["autodrive"] and
-          remote.interfaces["autodrive"].vehicle_proxy_destroyed then
-
-        log("Vehicle wagon loaded with an Autodrive vehicle was destroyed. Calling remote.interfaces[\"autodrive\"].vehicle_proxy_destroyed()!")
-        remote.call("autodrive", "vehicle_proxy_destroyed", {
-          autodrive_data = storage.wagon_data[unit_number].autodrive_data,
-          mod_name = script.mod_name,
-        })
-
-      -- If Autodrive is active, it will inform GCKI that the name should be removed,
-      -- so we can skip the call to GCKI!
-      elseif storage.wagon_data[unit_number].GCKI_data and
-          remote.interfaces["GCKI"] and
-          remote.interfaces["GCKI"].vehicle_proxy_destroyed then
-
-        log("Vehicle wagon loaded with a GCKI_vehicle was destroyed. Calling remote.interfaces[\"GCKI\"].vehicle_proxy_destroyed()!")
-        remote.call("GCKI", "vehicle_proxy_destroyed", {
-          GCKI_data = storage.wagon_data[unit_number].GCKI_data,
-          mod_name = script.mod_name,
-        })
-      end
+      deleteWagon(unit_number)
+    
+    -- See if it's a loading ramp, and if not assume it's a vehicle
+    elseif not OnLoadingRampOrRailDestroyed(event) then
+      -- Not a loading ramp/rail
+      -- Don't know if it was a car or a wagon, so try both.  These lists are pretty short.
+      clearWagon(unit_number)
+      clearVehicle(unit_number, {silent=true})
     end
-    deleteWagon(unit_number)
-  
-  -- See if it's a loading ramp
-  elseif not OnLoadingRampOrRailDestroyed(event) then
-    -- Not a loading ramp/rail
-    -- Don't know if it was a car or a wagon, so try both.  These lists are pretty short.
-    clearWagon(unit_number)
-    clearVehicle(unit_number, {silent=true})
+    
+  -- Purge train from tables by ID number
+  elseif event.type == defines.target_type.train then
+    purgeTrain(event.useful_id)
   end
 end
 

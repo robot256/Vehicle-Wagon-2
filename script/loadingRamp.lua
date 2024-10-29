@@ -1,7 +1,7 @@
 --[[ Copyright (c) 2024 robot256 (MIT License)
  * Project: Vehicle Wagon 2 rewrite
  * File: loadingRamp.lua
- * Description: Logic for controlling the automatic loading and unloading process.
+ * Description: Logic for placing and removing loading ramp entities.
  * Required to keep track of all the loading ramp entities, and trains stopped at train stops
  * that might be able to automatically load or unload a vehicle wagon.
  *
@@ -48,13 +48,13 @@ local DISTANCE_GROUND_TARGET = 0.5
 
 
 function InitLoadingRampData()
-  storage.rail_placed_queues = {}
-  storage.ramps_by_surface = {}
-  storage.loading_ramps = {}
-  storage.loading_rails = {}
-  storage.unloading_rails = {}
-  storage.active_ramps = {}
-  storage.stopped_trains = {}
+  storage.rail_placed_queues = storage.rail_placed_queues or {}
+  storage.ramps_by_surface = storage.ramps_by_surface or {}
+  storage.loading_ramps = storage.loading_ramps or {}
+  storage.loading_rails = storage.loading_rails or {}
+  storage.unloading_rails = storage.unloading_rails or {}
+  storage.active_ramps = storage.active_ramps or {}
+  storage.stopped_trains = storage.stopped_trains or {}
 end
 
 local function setRampVectors(ramp)
@@ -115,7 +115,7 @@ local function addRailToRamp(ramp, rail)
     dir_to_rail = defines.direction.west
   else
     -- rail is not adjacent to ramp at all
-    game.print("["..tostring(ramp_unit_number).."] Could not add rail "..tostring(rail_unit_number).." at vector "..util.positiontostr(vec_to_rail))
+    --game.print("["..tostring(ramp_unit_number).."] Could not add rail "..tostring(rail_unit_number).." at vector "..util.positiontostr(vec_to_rail))
     return false
   end
   
@@ -346,10 +346,23 @@ function OnRampOrStraightRailCreated(event)
     script.register_on_object_destroyed(ramp)
     
     local ramp_entry = storage.loading_ramps[unit_number]
-    if ramp_entry.loading_rail or (ramp_entry.unloading_rails and next(ramp_entry.unloading_rails)) then
-      -- This ramp is attached to at least one rail
-      -- TODO: Search for trains already stopped on this rail to become active
-      
+    -- Check if ramp is attached to rail, is there already a wagon to load/unload
+    -- Since this only happens when building, it's okay to do an entity search for a valid wagon
+    if ramp_entry.loading_rail then
+      local wagons = ramp.surface.find_entities_filtered{name="vehicle-wagon", position=ramp.drop_position}
+      if wagons[1] then
+        local wagon = wagons[1]
+        local train = wagon.train
+        addLoadingRampToTrain(ramp, ramp_entry.loading_rail, train, wagon)
+      end
+    elseif ramp_entry.unloading_rails and next(ramp_entry.unloading_rails) then
+      local wagons = ramp.surface.find_entities_filtered{name=storage.loadedWagonList, position=ramp.pickup_position}
+      if wagons[1] then
+        local wagon = wagons[1]
+        local train = wagon.train
+        -- unloading_rail_index is always set after calling setRampVectors()
+        addUnloadingRampToTrain(ramp, ramp_entry.unloading_rails[ramp_entry.unloading_rail_index], train, wagon)
+      end
     end
     
   elseif entity.type == "straight-rail" or entity.type == "legacy-straight-rail" then
@@ -396,8 +409,12 @@ function OnLoadingRampOrRailDestroyed(event)
         storage.ramps_by_surface[ramp_entry.surface_index] = nil
         storage.rail_placed_queues[ramp_entry.surface_index] = nil
       end
-      -- TODO: Remove from active trains
-      
+      -- Remove from active trains
+      if storage.active_ramps[unit_number] then
+        storage.stopped_trains[storage.active_ramps[unit_number].train.id].ramps[unit_number] = nil
+        storage.active_ramps[unit_number] = nil
+        updateOnTickStatus()
+      end
       
       -- Remove entry from global table
       storage.loading_ramps[unit_number] = nil
