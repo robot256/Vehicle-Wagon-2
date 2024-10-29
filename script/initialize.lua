@@ -88,6 +88,8 @@ function OnInit()
   makeGlobalMaps()
   -- Create global data tables
   makeGlobalTables()
+  -- Create loading ramp data tables
+  InitLoadingRampData()
   -- Check mod and seting state for unminable-ness
   storage.unminable_enabled = getUnminableStatus()
 end
@@ -100,7 +102,9 @@ function OnConfigurationChanged(event)
 
   -- Regenerate maps with any new prototypes.
   makeGlobalMaps()
-
+  -- Create loading ramp data tables if needed
+  InitLoadingRampData()
+  
   -- Purge data for any entities that were removed
   -- Migrations should already have added "wagon" and "vehicle" entity references to each valid entry
   for id,data in pairs(storage.wagon_data) do
