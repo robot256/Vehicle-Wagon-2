@@ -35,6 +35,10 @@
 --]]
 
 local math2d = require("math2d")
+local OnPlayerSelectedArea = require("OnPlayerSelectedArea")
+
+local LOADING_SEARCH_RADIUS = 2.5
+local MAX_POLLING_INTERVAL = 120
 
 function purgeTrain(train_id)
   -- A stopped train we are tracking just started moving again
@@ -54,7 +58,7 @@ function addLoadingRampToTrain(ramp, rail, train, wagon)
     local ramp_id = ramp.unit_number
     -- This ramp can load or unload this train, so add it to active_ramps
     game.print("Found that ramp "..tostring(ramp_id).." can load wagon "..tostring(wagon.unit_number).." on train "..tostring(train.id))
-    storage.active_ramps[ramp_id] = {ramp=ramp, rail=rail, train=train, wagon=wagon, loading=true}
+    storage.active_ramps[ramp_id] = {ramp=ramp, rail=rail, train=train, wagon=wagon, surface=wagon.surface, loading=true}
     storage.stopped_trains[train.id].ramps[ramp_id] = ramp
     updateOnTickStatus(true)
   end
@@ -65,7 +69,7 @@ function addUnloadingRampToTrain(ramp, rail, train, wagon)
     local ramp_id = ramp.unit_number
     -- This ramp can load or unload this train, so add it to active_ramps
     game.print("Found that ramp "..tostring(ramp_id).." can unload wagon "..tostring(wagon.unit_number).." on train "..tostring(train.id))
-    storage.active_ramps[ramp_id] = {ramp=ramp, rail=rail, train=train, wagon=wagon, loading=false}
+    storage.active_ramps[ramp_id] = {ramp=ramp, rail=rail, train=train, wagon=wagon, surface=wagon.surface, loading=false}
     storage.stopped_trains[train.id].ramps[ramp_id] = ramp
     updateOnTickStatus(true)
   end
@@ -116,11 +120,63 @@ local function OnTrainChangedState(event)
     purgeTrain(train.id)
   end
 end
-script.on_event(defines.events.on_train_changed_state, OnTrainChangedState)
+script.on_event({defines.events.on_train_changed_state,defines.events.on_train_created}, OnTrainChangedState)
 
 
 function ProcessActiveRamps()
-
-
-
+  -- See if any active ramps can unload based on their control behavior
+  for ramp_id, entry in pairs(storage.active_ramps) do
+    if not entry.tick or game.tick >= entry.tick then
+      if not (entry.ramp.valid and entry.wagon.valid) then
+        -- This shouldn't happen if on train destroyed works correctly
+        storage.active_ramps[ramp_id] = nil
+      else
+        -- Check this ramp's control behavior
+        if entry.ramp.status == defines.entity_status.waiting_for_source_items or
+           entry.ramp.status == defines.entity_status.waiting_for_train then
+          local surface = entry.surface or entry.wagon.surface
+          -- Just ignore this right now, let's unload if we can
+          if entry.loading then
+            -- Loading is harder, search for a vehicle
+            local vehicles = surface.find_entities_filtered{name=storage.vehicleList,
+                area=math2d.bounding_box.create_from_centre(entry.ramp.position, LOADING_SEARCH_RADIUS)}
+            local closest
+            local closest_distance = math.huge
+            for _,vehicle in pairs(vehicles) do
+              local distance = math2d.position.distance_squared(vehicle.position, entry.ramp.position)
+              if distance < closest_distance then
+                if vehicle.speed == 0 or 
+                   (vehicle.type == "spider-vehicle" and vehicle.follow_target and vehicle.follow_target == entry.ramp) then
+                  closest_distance = distance
+                  closest = vehicle
+                end
+              end
+            end
+            if closest then
+              OnPlayerSelectedArea{
+                item = "winch-tool",
+                surface = surface,
+                entities = {closest, entry.wagon},
+                position = entry.ramp.position
+              }
+            else
+              game.print(tostring(game.tick).." no vehicle found for ramp "..tostring(entry.ramp.unit_number))
+              entry.tick = game.tick + math.floor(math.random()*MAX_POLLING_INTERVAL)
+            end
+          else
+            -- Unloading is easy
+            OnPlayerSelectedArea{
+              item = "winch-tool",
+              surface = surface,
+              entities = {entry.wagon, entry.ramp},
+              position = entry.ramp.position
+            }
+          end
+        else
+          entry.tick = game.tick + math.floor(math.random()*MAX_POLLING_INTERVAL)
+        end
+      end
+    end
+  end
+  updateOnTickStatus()
 end

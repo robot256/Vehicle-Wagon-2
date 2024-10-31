@@ -13,7 +13,7 @@ function loadVehicleWagon(action)
   local player_index = action.player_index
   -- Make sure player exists
   local player
-  if player_index then
+  if player_index and player_index > 0 then
     player = game.players[player_index]
   end
 
@@ -37,7 +37,7 @@ function loadVehicleWagon(action)
   if not loaded_wagon or not loaded_wagon.valid then
     -- Unable to create the loaded wagon, don't teleport vehicle
     -- replaceCarriage will drop the wagon on the ground for player to pick up
-    player.create_local_flying_text{text={"vehicle-wagon2.loaded-wagon-error"}}
+    if player then player.create_local_flying_text{text={"vehicle-wagon2.loaded-wagon-error"}} end
     return
   end
 

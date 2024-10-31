@@ -103,6 +103,7 @@ end
 -- target: selected entity to track
 function renderVehicleVisuals(p, target)
   -- First clear existing renders for this player
+  if not p then return end
   clearVisuals(p)
   
   -- Then create circle for player
@@ -126,6 +127,8 @@ function renderWagonVisuals(p, target, vehicle_radius)
   -- First clear existing renders for this player
   if p then
     clearVisuals(p)
+  else
+    return
   end
   
   if not vehicle_radius then

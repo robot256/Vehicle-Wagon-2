@@ -102,6 +102,13 @@ function makeGlobalMaps()
     end
   end
   
+  -- Make a list to use for searching for loadable entities
+  storage.vehicleList = {}
+  local k = 1
+  for name,_ in pairs(storage.vehicleMap) do
+    storage.vehicleList[k] = name
+    k = k + 1
+  end
 end
 
 

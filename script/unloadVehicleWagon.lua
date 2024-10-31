@@ -27,13 +27,13 @@ function unloadVehicleWagon(action)
   end
 
   -- Make sure player exists
-  if player_index then
+  if player_index and player_index > 0 then
     player = game.players[player_index]
   end
 
   -- Make sure wagon exists
   local loaded_unit_number = nil
-  if not(loaded_wagon and loaded_wagon.valid) then
+  if not (loaded_wagon and loaded_wagon.valid) then
     if player then
       player.create_local_flying_text{text={"vehicle-wagon2.wagon-invalid-error"}}
     else

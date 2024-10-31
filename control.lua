@@ -62,12 +62,18 @@ end)
 -- Update loaded_wagon.minable properties when GCKI permission setting changes
 script.on_event(defines.events.on_runtime_mod_setting_changed, OnRuntimeModSettingChanged)
 
-function updateOnTickStatus(enable)
+function updateOnTickStatus(enable, silent)
   if enable or (storage.action_queue and table_size(storage.action_queue) > 0) or
      (storage.player_selection and table_size(storage.player_selection) > 0) or
      (storage.active_ramps and table_size(storage.active_ramps) > 0) then
+    if not silent and not script.get_event_handler(defines.events.on_tick) then
+      game.print(tostring(game.tick).." tick ON")
+    end
     script.on_event(defines.events.on_tick, process_tick)
   else
+    if not silent and script.get_event_handler(defines.events.on_tick) then
+      game.print(tostring(game.tick).." tick OFF")
+    end
     script.on_event(defines.events.on_tick, nil)
   end
 end
@@ -75,7 +81,7 @@ end
 --== ON_LOAD ==--
 -- Enable on_tick event according to global variable state
 script.on_load(function()
-  updateOnTickStatus()
+  updateOnTickStatus(false, true)
   RegisterFilteredEvents()
 end)
 
@@ -154,8 +160,11 @@ function process_tick(event)
           end
         end
       end
-    elseif action.player_index and game.players[action.player_index] and (action.status == "load" or action.status == "unload") then
-      local player = game.players[action.player_index]
+    elseif action.player_index and (action.player_index == -1 or game.players[action.player_index]) and (action.status == "load" or action.status == "unload") then
+      local player
+      if action.player_index > 0 then
+        player = game.players[action.player_index]
+      end
       ------- CHECK THAT WAGON AND CAR ARE STILL STOPPED ------
       local wagon = action.wagon
       local vehicle = action.vehicle
@@ -330,12 +339,14 @@ end
 function clearSelection(player_index, flags)
   flags = flags or {}
   -- Clear wagon/vehicle selections of this player
-  clearVisuals(player_index)
-  storage.player_selection[player_index] = nil
-  local player = game.players[player_index]
-  if player and flags.sound then
-    player.play_sound({path = "latch-off"})
+  if player_index > 0 then
+    clearVisuals(player_index)
+    local player = game.players[player_index]
+    if player and flags.sound then
+      player.play_sound({path = "latch-off"})
+    end
   end
+  storage.player_selection[player_index] = nil
 end
 
 function clearWagon(unit_number, flags)
@@ -347,7 +358,7 @@ function clearWagon(unit_number, flags)
       action.beam.destroy()
     end
     if action.status == "load" then
-      local player = game.players[action.player_index]
+      local player = (action.player_index > 0 and game.players[action.player_index]) or nil
       if player and not flags.silent then
         local message_position = (action.wagon and action.wagon.valid and action.wagon.position) or (action.vehicle and action.vehicle.valid and action.vehicle.position) or nil
         player.create_local_flying_text{text={"vehicle-wagon2.wagon-invalid-error"}, position=message_position}
@@ -629,7 +640,7 @@ script.on_event(defines.events.on_player_driving_changed_state, OnPlayerDrivingC
 
 
 
-------------------------- CURSOR AND BLUEPRINT HANDLING FOR 0.17.x ---------------------------------------
+------------------------- BLUEPRINT HANDLING ---------------------------------------
 
 --== ON_PLAYER_CONFIGURED_BLUEPRINT ==--
 -- ID 70, fires when you select a blueprint to place

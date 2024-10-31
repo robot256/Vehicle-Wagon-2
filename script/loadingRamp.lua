@@ -57,6 +57,30 @@ function InitLoadingRampData()
   storage.stopped_trains = storage.stopped_trains or {}
 end
 
+
+local function findTrainsForRamp(ramp)
+  local ramp_entry = storage.loading_ramps[ramp.unit_number]
+  -- Check if ramp is attached to rail, is there already a wagon to load/unload
+  -- Since this only happens when building, it's okay to do an entity search for a valid wagon
+  if ramp_entry.loading_rail then
+    local wagons = ramp.surface.find_entities_filtered{name="vehicle-wagon", position=ramp.drop_position}
+    if wagons[1] then
+      local wagon = wagons[1]
+      local train = wagon.train
+      addLoadingRampToTrain(ramp, ramp_entry.loading_rail, train, wagon)
+    end
+  elseif ramp_entry.unloading_rails and next(ramp_entry.unloading_rails) then
+    local wagons = ramp.surface.find_entities_filtered{name=storage.loadedWagonList, position=ramp.pickup_position}
+    if wagons[1] then
+      local wagon = wagons[1]
+      local train = wagon.train
+      -- unloading_rail_index is always set after calling setRampVectors()
+      addUnloadingRampToTrain(ramp, ramp_entry.unloading_rails[ramp_entry.unloading_rail_index], train, wagon)
+    end
+  end
+end
+
+
 local function setRampVectors(ramp)
   local unit_number = ramp.unit_number
   local ramp_entry = storage.loading_ramps[unit_number]
@@ -95,6 +119,9 @@ local function setRampVectors(ramp)
   end
   -- Set the inserter target to the chest
   ramp.pickup_target = ramp_entry.chest
+  
+  -- See if any train is present at the new vectors
+  findTrainsForRamp(ramp)
 end
 
 
@@ -144,7 +171,9 @@ local function addRailToRamp(ramp, rail)
   return true
 end
 
+
 function OnRampRotatedOrFlipped(event)
+  if event.entity.name ~= "loading-ramp" then return end
   -- When a ramp is rotated or flipped, the rails attached to it don't change, but they might change from loading to unloading or vice versa
   local ramp = event.entity
   local new_ramp_dir = ramp.direction
@@ -230,6 +259,7 @@ function OnRampRotatedOrFlipped(event)
   
   -- Update vectors since something must have changed
   setRampVectors(ramp)
+  
 end
 script.on_event({defines.events.on_player_rotated_entity, defines.events.on_player_flipped_entity}, OnRampRotatedOrFlipped)
 
@@ -310,6 +340,7 @@ function RegisterRailPlacedNthTick()
   end
 end
 
+
 function OnRampOrStraightRailCreated(event)
   local entity = event.entity
   local surface = entity.surface
@@ -344,26 +375,6 @@ function OnRampOrStraightRailCreated(event)
     
     -- Register the ramp entity
     script.register_on_object_destroyed(ramp)
-    
-    local ramp_entry = storage.loading_ramps[unit_number]
-    -- Check if ramp is attached to rail, is there already a wagon to load/unload
-    -- Since this only happens when building, it's okay to do an entity search for a valid wagon
-    if ramp_entry.loading_rail then
-      local wagons = ramp.surface.find_entities_filtered{name="vehicle-wagon", position=ramp.drop_position}
-      if wagons[1] then
-        local wagon = wagons[1]
-        local train = wagon.train
-        addLoadingRampToTrain(ramp, ramp_entry.loading_rail, train, wagon)
-      end
-    elseif ramp_entry.unloading_rails and next(ramp_entry.unloading_rails) then
-      local wagons = ramp.surface.find_entities_filtered{name=storage.loadedWagonList, position=ramp.pickup_position}
-      if wagons[1] then
-        local wagon = wagons[1]
-        local train = wagon.train
-        -- unloading_rail_index is always set after calling setRampVectors()
-        addUnloadingRampToTrain(ramp, ramp_entry.unloading_rails[ramp_entry.unloading_rail_index], train, wagon)
-      end
-    end
     
   elseif entity.type == "straight-rail" or entity.type == "legacy-straight-rail" then
     -- If there are any ramps on this surface, add it to the queue of rails on that surface to check later
@@ -449,4 +460,3 @@ function OnLoadingRampOrRailDestroyed(event)
     end
   end
 end
-

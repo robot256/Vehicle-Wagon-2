@@ -147,3 +147,32 @@ data:extend{
 }
 
 data.raw.inserter["loading-ramp"].platform_picture.sheet.scale = data.raw.inserter["loading-ramp"].collision_box[2][1]
+
+
+data:extend({
+  {
+    type = "technology",
+    name = "vehicle-ramps",
+    icon = "__vehicle-wagon-graphics__/graphics/tech-icon.png",
+    icon_size = 128,
+    effects =
+    {
+      {
+        type = "unlock-recipe",
+        recipe = "loading-ramp"
+      },
+    },
+    prerequisites = {"vehicle-wagons"},
+    unit =
+    {
+      count = 100,
+      ingredients =
+      {
+        {"automation-science-pack", 1},
+        {"logistic-science-pack", 1},
+      },
+      time = 30
+    },
+    order = "c-w-b",
+  },
+})
