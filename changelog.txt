@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.1.0
+Date: 2024-10-31
+  Features:
+    - Added Loading Ramps for automatic vehicle loading and unloading.
+    - Loading ramps act like inserters with circuit and logistic connection ability.
+    - Unloaded vehicles will point in the direction of the loading ramp inserter arrow.
+    - Recommended to use with the "inventory slot" option so train schedule can detect when vehicle cargo is loaded or unloaded.
+    - Highly experimental, please report issues.
+---------------------------------------------------------------------------------------------------
 Version: 4.0.5
 Date: 2024-10-31
   Bugfixes:
