@@ -66,9 +66,9 @@ function updateOnTickStatus(enable, silent)
   if enable or (storage.action_queue and table_size(storage.action_queue) > 0) or
      (storage.player_selection and table_size(storage.player_selection) > 0) or
      (storage.active_ramps and table_size(storage.active_ramps) > 0) then
-    if not silent and not script.get_event_handler(defines.events.on_tick) then
-      game.print(tostring(game.tick).." tick ON")
-    end
+--    if not silent and not script.get_event_handler(defines.events.on_tick) then
+--      game.print(tostring(game.tick).." tick ON")
+--    end
     script.on_event(defines.events.on_tick, process_tick)
   else
     if not silent and script.get_event_handler(defines.events.on_tick) then

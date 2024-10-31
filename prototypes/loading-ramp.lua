@@ -148,7 +148,6 @@ data:extend{
 
 data.raw.inserter["loading-ramp"].platform_picture.sheet.scale = data.raw.inserter["loading-ramp"].collision_box[2][1]
 
-
 data:extend({
   {
     type = "technology",
