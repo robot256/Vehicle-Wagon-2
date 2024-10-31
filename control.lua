@@ -20,7 +20,6 @@
  *   - on_entity_cloned
  *   - on_object_destroyed
  *   - on_player_driving_changed_state
- *   - on_player_pipette
  *   - on_player_setup_blueprint
  *   - on_player_used_spidertron_remote
 --]]
@@ -610,12 +609,6 @@ script.on_event(defines.events.on_player_driving_changed_state, OnPlayerDrivingC
 
 
 ------------------------- CURSOR AND BLUEPRINT HANDLING FOR 0.17.x ---------------------------------------
-
---== ON_PLAYER_PIPETTE ==--
--- Fires when player presses 'Q'.  We need to sneakily grab the correct item from inventory if it exists,
---  or sneakily give the correct item in cheat mode.
-script.on_event(defines.events.on_player_pipette,
-                function(event) blueprintLib.mapPipette(event, storage.loadedWagonMap) end)
 
 --== ON_PLAYER_CONFIGURED_BLUEPRINT ==--
 -- ID 70, fires when you select a blueprint to place

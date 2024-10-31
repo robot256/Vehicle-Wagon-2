@@ -16,6 +16,7 @@ local maxWeight = (useWeights and settings.startup["vehicle-wagon-maximum-weight
 
 local vehicle_wagon = util.table.deepcopy(data.raw["cargo-wagon"]["cargo-wagon"])
 vehicle_wagon.name = "vehicle-wagon"
+vehicle_wagon.placeable_by = {item="vehicle-wagon", count=1}
 vehicle_wagon.icon = "__vehicle-wagon-graphics__/graphics/vehicle-wagon-icon.png"
 vehicle_wagon.icon_size = 32
 if settings.startup["vehicle-wagon-inventory-slots"].value == "none" then
