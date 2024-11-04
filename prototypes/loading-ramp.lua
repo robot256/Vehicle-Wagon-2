@@ -151,7 +151,7 @@ data.raw.inserter["loading-ramp"].platform_picture.sheet.scale = data.raw.insert
 data:extend({
   {
     type = "technology",
-    name = "vehicle-ramps",
+    name = "vehicle-loading-ramps",
     icon = "__vehicle-wagon-graphics__/graphics/tech-icon.png",
     icon_size = 128,
     effects =

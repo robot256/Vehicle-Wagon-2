@@ -20,7 +20,7 @@
  * storage.unloading_rails: Dict[rail_unit_number]->Dict[ramp_unit_number]->LuaEntity(ramp)
  *     --> Stores all the rails that have adjacent loading ramps pointed away from the rail (could be more than one ramp per rail entity)
  *
- * storage.active_ramps: Dict[ramp_unit_number]->{ramp=LuaEntity, rail=LuaEntity, train=LuaTrain, wagon=LuaEntity}
+ * storage.active_ramps: Dict[ramp_unit_number]->{ramp=LuaEntity, rail=LuaEntity, train=LuaTrain, wagon=LuaEntity, vehicle=(LuaEntity or nil)}
  *     --> Stores all the ramps that are currently active: they have a loading/unloading candidate wagon stopped next to them.
  *         This is the list that gets polled to see when circuit conditions are met or a loadable vehicle comes within range.
  * storage.stopped_trains: Dict(train_id) -> {train=LuaTrain, ramps=Dict(unit_number)->LuaEntity}
@@ -38,7 +38,7 @@ local math2d = require("math2d")
 local OnPlayerSelectedArea = require("OnPlayerSelectedArea")
 
 local LOADING_SEARCH_RADIUS = 2.5
-local MAX_POLLING_INTERVAL = 120
+local MAX_POLLING_INTERVAL = 30
 
 function purgeTrain(train_id)
   -- A stopped train we are tracking just started moving again
@@ -57,19 +57,19 @@ function addLoadingRampToTrain(ramp, rail, train, wagon)
   if storage.stopped_trains[train.id] then
     local ramp_id = ramp.unit_number
     -- This ramp can load or unload this train, so add it to active_ramps
-    game.print("Found that ramp "..tostring(ramp_id).." can load wagon "..tostring(wagon.unit_number).." on train "..tostring(train.id))
+    --game.print("Found that ramp "..tostring(ramp_id).." can load wagon "..tostring(wagon.unit_number).." on train "..tostring(train.id))
     storage.active_ramps[ramp_id] = {ramp=ramp, rail=rail, train=train, wagon=wagon, surface=wagon.surface, loading=true}
     storage.stopped_trains[train.id].ramps[ramp_id] = ramp
     updateOnTickStatus(true)
   end
 end
 
-function addUnloadingRampToTrain(ramp, rail, train, wagon)
+function addUnloadingRampToTrain(ramp, rail, train, wagon, vehicle)
   if storage.stopped_trains[train.id] then
     local ramp_id = ramp.unit_number
     -- This ramp can load or unload this train, so add it to active_ramps
-    game.print("Found that ramp "..tostring(ramp_id).." can unload wagon "..tostring(wagon.unit_number).." on train "..tostring(train.id))
-    storage.active_ramps[ramp_id] = {ramp=ramp, rail=rail, train=train, wagon=wagon, surface=wagon.surface, loading=false}
+    --game.print("Found that ramp "..tostring(ramp_id).." can unload wagon "..tostring(wagon.unit_number).." on train "..tostring(train.id))
+    storage.active_ramps[ramp_id] = {ramp=ramp, rail=rail, train=train, wagon=wagon, vehicle=vehicle, surface=wagon.surface, loading=false}
     storage.stopped_trains[train.id].ramps[ramp_id] = ramp
     updateOnTickStatus(true)
   end
@@ -109,7 +109,7 @@ local function OnTrainChangedState(event)
             for wagon_id,wagon in pairs(loaded_wagons) do
               if math2d.bounding_box.contains_point(wagon.bounding_box, ramp.pickup_position) then
                 -- This wagon is in the pickup zone of this ramp
-                addUnloadingRampToTrain(ramp, rail, train, wagon)
+                addUnloadingRampToTrain(ramp, rail, train, wagon, storage.wagon_data[wagon.unit_number].vehicle)
               end
             end
           end
@@ -123,6 +123,83 @@ end
 script.on_event({defines.events.on_train_changed_state,defines.events.on_train_created}, OnTrainChangedState)
 
 
+local function qualityComparison(left, comparator, right)
+  if comparator == "=" then
+    return left == right
+  elseif comparator == "≠" or comparator == "!=" then
+    return left ~= right
+  elseif comparator == ">" then
+    return left > right
+  elseif comparator == "<" then
+    return left < right
+  elseif comparator == "≥" or comparator == ">=" then
+    return left >= right
+  elseif comparator == "≤" or comparator == "<=" then
+    return left <= right
+  else
+    assert(false, "Invalid quality comparator string in loading ramp process")
+  end
+end
+
+local function doesVehiclePassFilter(ramp, vehicle)
+  -- Check inserter's filters
+  local vehicle_quality = vehicle.quality
+  local filter_passed = true
+  if ramp.use_filters then
+    if ramp.inserter_filter_mode == "whitelist" then
+      filter_passed = false
+      for slot_index=1, ramp.filter_slot_count do
+        local filter = ramp.get_filter(slot_index)
+        if filter then
+          local name_passed = false
+          local quality_passed = false
+          if not filter.name or filter.name == vehicle.name then
+            name_passed = true
+          end
+          if not filter.quality then
+            quality_passed = true
+          else
+            local filter_level = (type(filter.quality) == "string" and prototypes.quality[filter.quality].level) or filter.quality.level
+            local vehicle_level = vehicle.quality.level
+            local comparator = filter.comparator or "="
+            quality_passed = qualityComparison(vehicle_level, comparator, filter_level)
+          end
+          if name_passed and quality_passed then
+            filter_passed = true
+            break
+          end
+        end
+      end
+    elseif ramp.inserter_filter_mode == "blacklist" then
+      filter_passed = true
+      for slot_index=1, ramp.filter_slot_count do
+        local filter = ramp.get_filter(slot_index)
+        if filter then
+          local name_passed = false
+          local quality_passed = false
+          if not filter.name or filter.name == vehicle.name then
+            name_passed = true
+          end
+          if not filter.quality then
+            quality_passed = true
+          else
+            local filter_level = (type(filter.quality) == "string" and prototypes.quality[filter.quality].level) or filter.quality.level
+            local vehicle_level = vehicle.quality.level
+            local comparator = filter.comparator or "="
+            quality_passed = qualityComparison(vehicle_level, comparator, filter_level)
+          end
+          if name_passed and quality_passed then
+            filter_passed = false
+            break
+          end
+        end
+      end
+    end
+  end
+  return filter_passed
+end
+  
+
 function ProcessActiveRamps()
   -- See if any active ramps can unload based on their control behavior
   for ramp_id, entry in pairs(storage.active_ramps) do
@@ -134,6 +211,7 @@ function ProcessActiveRamps()
         -- Check this ramp's control behavior
         if entry.ramp.status == defines.entity_status.waiting_for_source_items or
            entry.ramp.status == defines.entity_status.waiting_for_train then
+          
           local surface = entry.surface or entry.wagon.surface
           -- Just ignore this right now, let's unload if we can
           if entry.loading then
@@ -145,10 +223,11 @@ function ProcessActiveRamps()
             for _,vehicle in pairs(vehicles) do
               local distance = math2d.position.distance_squared(vehicle.position, entry.ramp.position)
               if distance < closest_distance then
-                if vehicle.speed == 0 or 
-                   (vehicle.type == "spider-vehicle" and vehicle.follow_target and vehicle.follow_target == entry.ramp) then
-                  closest_distance = distance
-                  closest = vehicle
+                if vehicle.speed == 0 or (vehicle.type == "spider-vehicle" and vehicle.follow_target and vehicle.follow_target == entry.ramp) then
+                  if doesVehiclePassFilter(entry.ramp, vehicle) then
+                    closest_distance = distance
+                    closest = vehicle
+                  end
                 end
               end
             end
@@ -160,20 +239,27 @@ function ProcessActiveRamps()
                 position = entry.ramp.position
               }
             else
-              game.print(tostring(game.tick).." no vehicle found for ramp "..tostring(entry.ramp.unit_number))
-              entry.tick = game.tick + math.floor(math.random()*MAX_POLLING_INTERVAL)
+              --game.print(tostring(game.tick).." no vehicle found for ramp "..tostring(entry.ramp.unit_number))
+              entry.tick = game.tick + MAX_POLLING_INTERVAL
             end
           else
-            -- Unloading is easy
-            OnPlayerSelectedArea{
-              item = "winch-tool",
-              surface = surface,
-              entities = {entry.wagon, entry.ramp},
-              position = entry.ramp.position
-            }
+            if not entry.vehicle then
+              entry.vehicle = storage.wagon_data[entry.wagon.unit_number].Vehicle
+            end
+            if doesVehiclePassFilter(entry.ramp, entry.vehicle) then
+              -- Unloading is easy
+              OnPlayerSelectedArea{
+                item = "winch-tool",
+                surface = surface,
+                entities = {entry.wagon, entry.ramp},
+                position = entry.ramp.position
+              }
+            else
+              entry.tick = game.tick + MAX_POLLING_INTERVAL
+            end
           end
         else
-          entry.tick = game.tick + math.floor(math.random()*MAX_POLLING_INTERVAL)
+          entry.tick = game.tick + MAX_POLLING_INTERVAL
         end
       end
     end

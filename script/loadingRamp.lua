@@ -75,7 +75,7 @@ local function findTrainsForRamp(ramp)
       local wagon = wagons[1]
       local train = wagon.train
       -- unloading_rail_index is always set after calling setRampVectors()
-      addUnloadingRampToTrain(ramp, ramp_entry.unloading_rails[ramp_entry.unloading_rail_index], train, wagon)
+      addUnloadingRampToTrain(ramp, ramp_entry.unloading_rails[ramp_entry.unloading_rail_index], train, wagon, storage.wagon_data[wagon.unit_number].vehicle)
     end
   end
 end
