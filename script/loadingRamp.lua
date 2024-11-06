@@ -277,40 +277,45 @@ local function ProcessRailPlacedQueue(event)
       if num_ramps < num_rails then
         local queue_map = {}
         for _,newrail in pairs(queue) do
-          queue_map[newrail.unit_number] = true
-        end
-        
-        game.print("Checking queue per ramp")
-        -- Check the area around every ramp on this surface
-        for ramp_unit_number, ramp in pairs(storage.ramps_by_surface[surface_index]) do
-          local rails = surface.find_entities_filtered{
-            type = {"straight-rail", "legacy-straight-rail"},
-            area = math2d.bounding_box.create_from_centre(ramp.position, 2*DISTANCE_RAMP_TO_RAIL)
-          }
-          local ramp_entry = storage.loading_ramps[ramp_unit_number]
-          local changed = false
-          for _,rail in pairs(rails) do
-            if queue_map[rail.unit_number] then
-              -- It is a new one, add it to the ramp and go to the next found rail
-              game.print("Found new rail "..tostring(rail.unit_number).." near ramp "..tostring(ramp_unit_number))
-              changed = addRailToRamp(ramp, rail) or changed
-            end
+          if newrail.valid then
+            queue_map[newrail.unit_number] = true
           end
-          if changed then
-            setRampVectors(ramp)
+        end
+        if next(queue_map) then
+          game.print("Checking queue per ramp")
+          -- Check the area around every ramp on this surface
+          for ramp_unit_number, ramp in pairs(storage.ramps_by_surface[surface_index]) do
+            local rails = surface.find_entities_filtered{
+              type = {"straight-rail", "legacy-straight-rail"},
+              area = math2d.bounding_box.create_from_centre(ramp.position, 2*DISTANCE_RAMP_TO_RAIL)
+            }
+            local ramp_entry = storage.loading_ramps[ramp_unit_number]
+            local changed = false
+            for _,rail in pairs(rails) do
+              if queue_map[rail.unit_number] then
+                -- It is a new one, add it to the ramp and go to the next found rail
+                game.print("Found new rail "..tostring(rail.unit_number).." near ramp "..tostring(ramp_unit_number))
+                changed = addRailToRamp(ramp, rail) or changed
+              end
+            end
+            if changed then
+              setRampVectors(ramp)
+            end
           end
         end
       else
         game.print("Checking queue per rail")
         -- Check the area around every rail in the queue
         for _,newrail in pairs(queue) do
-          local ramps = surface.find_entities_filtered{
-            name = "loading-ramp",
-            area = math2d.bounding_box.create_from_centre(newrail.position, 4)
-          }
-          for _,ramp in pairs(ramps) do
-            if addRailToRamp(ramp, newrail) then
-              setRampVectors(ramp)
+          if newrail.valid then
+            local ramps = surface.find_entities_filtered{
+              name = "loading-ramp",
+              area = math2d.bounding_box.create_from_centre(newrail.position, 4)
+            }
+            for _,ramp in pairs(ramps) do
+              if addRailToRamp(ramp, newrail) then
+                setRampVectors(ramp)
+              end
             end
           end
         end
