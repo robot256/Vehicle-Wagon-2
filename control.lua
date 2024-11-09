@@ -71,9 +71,9 @@ function updateOnTickStatus(enable, silent)
 --    end
     script.on_event(defines.events.on_tick, process_tick)
   else
-    if not silent and script.get_event_handler(defines.events.on_tick) then
-      game.print(tostring(game.tick).." tick OFF")
-    end
+    --if not silent and script.get_event_handler(defines.events.on_tick) then
+    --  game.print(tostring(game.tick).." tick OFF")
+    --end
     script.on_event(defines.events.on_tick, nil)
   end
 end

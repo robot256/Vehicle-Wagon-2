@@ -8,6 +8,13 @@
 function getHiddenSurface()
   -- Check if the surface already exists
   if not game.surfaces[VWSURF] then
+    
+    -- RSO Compatibility
+    if remote.interfaces["RSO"] then
+      log("Sending RSO remote call to ignore hidden surface")
+      remote.call("RSO", "ignoreSurface", VWSURF)
+    end
+    
     log("Creating Vehicle Wagon Surface")
     local surface = game.create_surface(VWSURF, {
         width=160,
