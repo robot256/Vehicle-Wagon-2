@@ -105,6 +105,9 @@ function OnConfigurationChanged(event)
   -- Create loading ramp data tables if needed
   InitLoadingRampData()
   
+  -- Make sure the surface is hidden for everyone after migration
+  hideSurfaceForAll()
+  
   -- Purge data for any entities that were removed
   -- Migrations should already have added "wagon" and "vehicle" entity references to each valid entry
   for id,data in pairs(storage.wagon_data) do

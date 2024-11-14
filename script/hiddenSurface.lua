@@ -5,6 +5,22 @@
  ]]--
 
 
+function hideSurfaceForAll()
+  local surface = game.surfaces[VWSURF]
+  if surface then
+    for _,force in pairs(game.forces) do
+      force.set_surface_hidden(surface, true)
+    end
+  end
+end
+
+function hideSurface(event)
+  if game.surfaces[VWSURF] then
+    event.force.set_surface_hidden(game.surfaces[VWSURF], true)
+  end
+end
+script.on_event(defines.events.on_force_created, hideSurface)
+
 function getHiddenSurface()
   -- Check if the surface already exists
   if not game.surfaces[VWSURF] then
@@ -34,6 +50,7 @@ function getHiddenSurface()
     )
     surface.request_to_generate_chunks({0,0},6)
     surface.force_generate_chunk_requests()
+    hideSurfaceForAll()
   end
   return game.surfaces[VWSURF]
 end
@@ -41,4 +58,3 @@ end
 function getTeleportCoordinate()
   return {x=math.random()*120-60,y=math.random()*120-60}
 end
-
