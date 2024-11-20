@@ -152,7 +152,7 @@ local function addRailToRamp(ramp, rail)
   if dir_to_rail == ramp.direction then
     -- This ramp is loading this rail
     ramp_entry.loading_rail = rail
-    game.print("["..tostring(ramp_unit_number).."] Adding loading rail "..tostring(rail_unit_number).." to the "..helpers.direction_to_string(dir_to_rail).." at vector "..util.positiontostr(vec_to_rail))
+    --game.print("["..tostring(ramp_unit_number).."] Adding loading rail "..tostring(rail_unit_number).." to the "..helpers.direction_to_string(dir_to_rail).." at vector "..util.positiontostr(vec_to_rail))
     -- Add to list of rails also
     storage.loading_rails[rail_unit_number] = storage.loading_rails[rail_unit_number] or {}
     storage.loading_rails[rail_unit_number][ramp_unit_number] = ramp
@@ -160,7 +160,7 @@ local function addRailToRamp(ramp, rail)
     -- This ramp is unloading this rail
     ramp_entry.unloading_rails = ramp_entry.unloading_rails or {}
     ramp_entry.unloading_rails[rail_unit_number] = {rail=rail, dir_to_rail=dir_to_rail}
-    game.print("["..tostring(ramp_unit_number).."] Adding unloading rail "..tostring(rail_unit_number).." to the "..helpers.direction_to_string(dir_to_rail).." at vector "..util.positiontostr(vec_to_rail))
+    --game.print("["..tostring(ramp_unit_number).."] Adding unloading rail "..tostring(rail_unit_number).." to the "..helpers.direction_to_string(dir_to_rail).." at vector "..util.positiontostr(vec_to_rail))
     -- Add to list of rails also
     storage.unloading_rails[rail_unit_number] = storage.unloading_rails[rail_unit_number] or {}
     storage.unloading_rails[rail_unit_number][ramp_unit_number] = ramp
@@ -282,7 +282,7 @@ local function ProcessRailPlacedQueue(event)
           end
         end
         if next(queue_map) then
-          game.print("Checking queue per ramp")
+          --game.print("Checking queue per ramp")
           -- Check the area around every ramp on this surface
           for ramp_unit_number, ramp in pairs(storage.ramps_by_surface[surface_index]) do
             local rails = surface.find_entities_filtered{
@@ -294,7 +294,7 @@ local function ProcessRailPlacedQueue(event)
             for _,rail in pairs(rails) do
               if queue_map[rail.unit_number] then
                 -- It is a new one, add it to the ramp and go to the next found rail
-                game.print("Found new rail "..tostring(rail.unit_number).." near ramp "..tostring(ramp_unit_number))
+                --game.print("Found new rail "..tostring(rail.unit_number).." near ramp "..tostring(ramp_unit_number))
                 changed = addRailToRamp(ramp, rail) or changed
               end
             end
@@ -304,7 +304,7 @@ local function ProcessRailPlacedQueue(event)
           end
         end
       else
-        game.print("Checking queue per rail")
+        --game.print("Checking queue per rail")
         -- Check the area around every rail in the queue
         for _,newrail in pairs(queue) do
           if newrail.valid then
