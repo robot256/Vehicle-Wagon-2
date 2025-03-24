@@ -32,6 +32,7 @@ blueprintLib = require("__Robot256Lib__/script/blueprint_replacement")
 saveRestoreLib = require("__Robot256Lib__/script/save_restore")
 filterLib = require("__Robot256Lib__/script/event_filters")
 
+require("script.getVehicleItem")
 require("script.renderVisuals")
 require("script.hiddenSurface")
 require("script.loadVehicleWagon")
@@ -246,7 +247,7 @@ function onPrePlayerRemoved(event)
       if not storage.unminable_enabled then
         -- Make wagon minable when it belongs to no one
         if not (data.GCKI_data.owner or data.GCKI_data.locker) and data.wagon and data.wagon.valid then
-          data.wagon.minable = true
+          data.wagon.minable_flag = true
         end
       end
     end
@@ -279,7 +280,7 @@ function release_owned_by_player(p)
         if not storage.unminable_enabled then
           -- Make wagon minable when it belongs to no one
           if not (data.GCKI_data.owner or data.GCKI_data.locker) and data.wagon and data.wagon.valid then
-            data.wagon.minable = true
+            data.wagon.minable_flag = true
           end
         end
       end

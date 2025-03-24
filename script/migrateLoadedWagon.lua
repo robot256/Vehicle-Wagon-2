@@ -66,7 +66,7 @@ function migrateLoadedWagon(loaded_unit_number)
   local wagon_inv = loaded_wagon.get_inventory(defines.inventory.cargo_wagon)
   if wagon_inv then
     wagon_inv.clear()
-    if wagon_inv.insert({name=wagon_data.name, count=1}) == 1 then
+    if wagon_inv.insert({name=getVehicleItem(wagon_data.name), count=1}) == 1 then
       -- Inserted vehicle item, delete the old icon
       if wagon_data.icon then
         clearIcon(wagon_data)

@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.1.6
+Date: 2025-03-24
+  Changes:
+    - Updated translations from Crowdin.
+    - Use the new "minable_flag" property instead of "minable".
+  Bugfixes:
+    - Fixed crash when loading AAI "AI" vehicles by doing a better job of determining what item is associate with the vehicle entity.
+---------------------------------------------------------------------------------------------------
 Version: 4.1.5
 Date: 2024-11-19
   Changes:

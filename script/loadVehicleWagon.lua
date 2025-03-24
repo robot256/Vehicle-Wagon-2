@@ -6,7 +6,6 @@
  *    2. Teleport the vehicle to the hidden surface and store settings in the storage.wagon_data table.
  --]]
 
-
 -------------------------
 -- Load Wagon
 function loadVehicleWagon(action)
@@ -87,7 +86,7 @@ function loadVehicleWagon(action)
   local destposition = getTeleportCoordinate()
   if vehicle.teleport(destposition, destsurface, true, false) then
     -- Put the shadow item in the loaded wagon inventory
-    if loaded_wagon.insert({name=vehicle.name, count=1, quality=vehicle.quality}) ~= 1 then
+    if loaded_wagon.insert({name=getVehicleItem(vehicle.name), count=1, quality=vehicle.quality}) ~= 1 then
       -- Put an icon on the wagon showing contents
       saveData.icon = renderIcon(loaded_wagon, vehicle.name)
     end

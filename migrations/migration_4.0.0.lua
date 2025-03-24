@@ -6,6 +6,7 @@
 
 -- Load global prototype data
 require("__VehicleWagon2__.script.makeGlobalMaps")
+require("__VehicleWagon2__.script.getVehicleItem")
 require("__VehicleWagon2__.script.migrateLoadedWagon")
 
 makeGlobalMaps()
@@ -34,7 +35,7 @@ if storage.wagon_data then
         if wagon and wagon.valid then
           -- Restore correct minable property to empty wagon
           if not storage.unminable_enabled then
-            wagon.minable = true
+            wagon.minable_flag = true
           end
         else
           log({"vehicle-wagon2.migrate-empty-wagon-error"})
