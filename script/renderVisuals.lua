@@ -127,8 +127,6 @@ function renderWagonVisuals(p, target, vehicle_radius)
   -- First clear existing renders for this player
   if p then
     clearVisuals(p)
-  else
-    return
   end
   
   if not vehicle_radius then

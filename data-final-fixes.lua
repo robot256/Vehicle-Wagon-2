@@ -5,12 +5,14 @@
  --]]
 
 
--- Update speeds
-if mods["TrainOverhaul"] then
-  for name,entity in pairs(data.raw["cargo-wagon"]) do
-    if string.find(name,"vehicle%-wagon") ~= nil then
-      entity.max_speed = data.raw["locomotive"]["nuclear-locomotive"].max_speed
-    end
+-- Update speeds to match fastest cargo wagon in the game
+local max_speed = data.raw["cargo-wagon"]["cargo-wagon"].max_speed
+for name,entity in pairs(data.raw["cargo-wagon"]) do
+  max_speed = math.max(max_speed, entity.max_speed)
+end
+for name,entity in pairs(data.raw["cargo-wagon"]) do
+  if string.find(name,"vehicle%-wagon") ~= nil then
+    entity.max_speed = max_speed
   end
 end
 

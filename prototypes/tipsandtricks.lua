@@ -384,9 +384,12 @@ local unloading_sim =
       end
       
       -- delete the graphics
-      for _,d in pairs(storage.drawings) do
-        d.destroy()
+      if storage.drawings then
+        for _,d in pairs(storage.drawings) do
+          d.destroy()
+        end
       end
+      
       -- Create the loading ramp
       renderUnloadingRamp(storage.leftwagon, SIM_CARPOS, prototypes.entity["car"].radius)
       -- Play the loading sound
@@ -511,9 +514,12 @@ local unloading_sim =
       end
       
       -- delete the graphics
-      for _,d in pairs(storage.drawings) do
-        d.destroy()
+      if storage.drawings then
+        for _,d in pairs(storage.drawings) do
+          d.destroy()
+        end
       end
+      
       -- Create the loading ramp
       renderUnloadingRamp(storage.rightwagon, SIM_TANKPOS, prototypes.entity["tank"].radius)
       -- Play the loading sound
@@ -552,10 +558,22 @@ local unloading_sim =
     step_1()
   ]]
 
-
 }
 
 
+local vw_tip_trigger = {
+      type = "or",
+      triggers = {
+        --{
+        --  type = "unlock-recipe",
+        --  recipe = "vehicle-wagon"
+        --},
+        {
+          type = "build-entity",
+          entity = "vehicle-wagon"
+        }
+      }
+    }
 
 data.extend{
   {
@@ -570,11 +588,7 @@ data.extend{
     category = "vehicle-wagon",
     order = "a",
     is_title = true,
-    trigger =
-    {
-      type = "build-entity",
-      entity = "vehicle-wagon"
-    },
+    trigger = vw_tip_trigger,
     simulation = loading_sim
   },
   {
@@ -585,11 +599,7 @@ data.extend{
     order = "b",
     is_title = false,
     indent = 1,
-    trigger =
-    {
-      type = "build-entity",
-      entity = "vehicle-wagon"
-    },
+    trigger = vw_tip_trigger,
     simulation = unloading_sim
   },
 }

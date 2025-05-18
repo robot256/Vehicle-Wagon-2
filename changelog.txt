@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.1.7
+Date: 2025-05-17
+  Changes:
+    - Updated translations from Crowdin.
+    - Vehicle wagon will always have the max speed of the fastest cargo wagon (for mod compatibility).
+  Bugfixes:
+    - Fixed crash in the unloading tips'n'tricks simulation.
+    - Fixed that unloading range was not shown in the simulation.
+---------------------------------------------------------------------------------------------------
 Version: 4.1.6
 Date: 2025-03-24
   Changes:
