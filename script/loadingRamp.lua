@@ -403,7 +403,7 @@ function OnLoadingRampOrRailDestroyed(event)
         ramp_entry.chest.destroy()
       end
       -- Unlink the loading rail, if any
-      if ramp_entry.loading_rail then
+      if ramp_entry.loading_rail and ramp_entry.loading_rail.valid then
         local rid = ramp_entry.loading_rail.unit_number
         storage.loading_rails[rid][unit_number] = nil
         if not next(storage.loading_rails[rid]) then
@@ -443,8 +443,12 @@ function OnLoadingRampOrRailDestroyed(event)
       if rail_entry then
         found = true
         for ramp_id,ramp in pairs(rail_entry) do
-          storage.loading_ramps[ramp_id].loading_rail = nil
-          setRampVectors(ramp)
+          if storage.loading_ramps[ramp_id] then
+            storage.loading_ramps[ramp_id].loading_rail = nil
+            if ramp.valid then
+              setRampVectors(ramp)
+            end
+          end
         end
       end
       -- Now check if it's an unloading rail for any ramps
@@ -457,7 +461,9 @@ function OnLoadingRampOrRailDestroyed(event)
           if not next(ramp_entry.unloading_rails) then
             ramp_entry.unloading_rails = nil
           end
-          setRampVectors(ramp)
+          if ramp.valid then
+            setRampVectors(ramp)
+          end
         end
       end
       
