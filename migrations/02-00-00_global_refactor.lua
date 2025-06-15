@@ -116,7 +116,7 @@ makeGlobalMaps()
 if storage.vehicle_data then
 
   log("Vehicle Wagon 2 global before migration:")
-  log(serpent.block(global))
+  log(serpent.block(storage))
 
   -- If storage.vehicle_data exists at all, then we are loading a 1.2.x save.
   -- Step 0: Clear Pending Selections and Actions from old vehicle_data table
@@ -275,7 +275,7 @@ if storage.vehicle_data then
   game.print({"vehicle-wagon2.migrate-12x-success"})
   
   log("Vehicle Wagon 2 global after migration:")
-  log(serpent.block(global))
+  log(serpent.block(storage))
 end
 
 -- Create new-style tables if needed

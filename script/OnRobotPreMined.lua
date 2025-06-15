@@ -31,7 +31,7 @@ function OnRobotPreMined(event)
       game.print({"vehicle-wagon2.data-error", unit_number})
     elseif not wagonData.vehicle or not wagonData.vehicle.valid then
       -- Loaded wagon data or vehicle entity is invalid
-      game.print({"vehicle-wagon2.vehicle-missing-error", loaded_unit_number, wagon_data.name})
+      game.print({"vehicle-wagon2.vehicle-missing-error", unit_number, wagonData.name})
     else
       -- We can try to unload this wagon
       local vehicle = unloadVehicleWagon{status="unload", wagon=entity, replace_wagon=false}

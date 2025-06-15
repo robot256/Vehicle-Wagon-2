@@ -28,7 +28,6 @@ function OnPrePlayerMinedItem(event)
     local player_index = event.player_index
     
     local player = game.players[player_index]
-    local surface = player.surface
     local wagonData = storage.wagon_data[unit_number]
     if not wagonData then
       -- Loaded wagon data or vehicle entity is invalid
@@ -44,10 +43,6 @@ function OnPrePlayerMinedItem(event)
       
       if not vehicle then
         -- Vehicle could not be unloaded via teleporting to a safe space
-        
-        -- Insert vehicle and contents into player's inventory
-        local playerPosition = player.position
-        local playerInventory = player.get_main_inventory()
         
         -- Mine the vehicle and insert it into the player's inventory
         if wagonData.vehicle and wagonData.vehicle.valid then

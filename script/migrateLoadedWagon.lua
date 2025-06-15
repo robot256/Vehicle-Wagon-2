@@ -26,7 +26,7 @@ function migrateLoadedWagon(loaded_unit_number)
   -- Make sure wagon exists
   local loaded_wagon = wagon_data.wagon
   if not(loaded_wagon and loaded_wagon.valid) then
-    log({"vehicle-wagon2.migrate-wagon-error", loaded_unit_number, wagon.name})
+    log({"vehicle-wagon2.migrate-wagon-error", loaded_unit_number, wagon_data.name})
     return
   end
 
@@ -39,7 +39,7 @@ function migrateLoadedWagon(loaded_unit_number)
   
   -- If we still can't find a position, give up
   if not unload_position then
-    log({"vehicle-wagon2.migrate-vehicle-error", loaded_unit_number, wagon.name})
+    log({"vehicle-wagon2.migrate-vehicle-error", loaded_unit_number, wagon_data.name})
     storage.wagon_data[loaded_unit_number] = nil
     return
   end
@@ -58,7 +58,7 @@ function migrateLoadedWagon(loaded_unit_number)
 
   -- If vehicle not created, give up and erase data
   if not vehicle then
-    log({"vehicle-wagon2.migrate-vehicle-error", loaded_unit_number, wagon.name})
+    log({"vehicle-wagon2.migrate-vehicle-error", loaded_unit_number, wagon_data.name})
     return
   end
 
@@ -100,8 +100,7 @@ function migrateLoadedWagon(loaded_unit_number)
   local r1 = saveRestoreLib.restoreBurner(vehicle.burner, wagon_data.burner)
 
   -- Restore equipment grid
-  local r2 = saveRestoreLib.restoreGrid(vehicle.grid, wagon_data.grid)
-  r1 = saveRestoreLib.mergeStackLists(r1, r2)
+  r1 = saveRestoreLib.mergeStackLists(r1, saveRestoreLib.restoreGrid(vehicle.grid, wagon_data.grid))
 
   -- Restore inventory contents and settings
   if vehicle.type == "car" then
@@ -114,8 +113,7 @@ function migrateLoadedWagon(loaded_unit_number)
     -- Restore ammo inventory if this car has guns
     if vehicle.selected_gun_index then
       local ammoInventory = vehicle.get_inventory(defines.inventory.car_ammo)
-      local r2 = saveRestoreLib.insertInventoryStacks(ammoInventory, wagon_data.items.ammo)
-      r1 = saveRestoreLib.mergeStackLists(r1, r2)
+      r1 = saveRestoreLib.mergeStackLists(r1, saveRestoreLib.insertInventoryStacks(ammoInventory, wagon_data.items.ammo))
 
       -- Restore the selected gun index
       if wagon_data.selected_gun_index then
@@ -125,13 +123,11 @@ function migrateLoadedWagon(loaded_unit_number)
 
     -- Restore the cargo inventory
     local trunkInventory = vehicle.get_inventory(defines.inventory.car_trunk)
-    local r2 = saveRestoreLib.insertInventoryStacks(trunkInventory, wagon_data.items.trunk)
-    r1 = saveRestoreLib.mergeStackLists(r1, r2)
+    r1 = saveRestoreLib.mergeStackLists(r1, saveRestoreLib.insertInventoryStacks(trunkInventory, wagon_data.items.trunk))
 
     -- Try to insert remainders into trunk, spill whatever doesn't fit
     if r1 then
-      local r2 = saveRestoreLib.insertInventoryStacks(trunkInventory, r1)
-      saveRestoreLib.spillStacks(r2, surface, unload_position)
+      saveRestoreLib.spillStacks(saveRestoreLib.insertInventoryStacks(trunkInventory, r1), surface, unload_position)
     end
 
   elseif vehicle.type == "spider-vehicle" then
@@ -144,8 +140,7 @@ function migrateLoadedWagon(loaded_unit_number)
     -- Restore ammo inventory if this spider has guns
     if vehicle.selected_gun_index then
       local ammoInventory = vehicle.get_inventory(defines.inventory.spider_ammo)
-      local r2 = saveRestoreLib.insertInventoryStacks(ammoInventory, wagon_data.items.ammo)
-      r1 = saveRestoreLib.mergeStackLists(r1, r2)
+      r1 = saveRestoreLib.mergeStackLists(r1, saveRestoreLib.insertInventoryStacks(ammoInventory, wagon_data.items.ammo))
 
       -- Restore the selected gun index
       if wagon_data.selected_gun_index then
@@ -157,18 +152,15 @@ function migrateLoadedWagon(loaded_unit_number)
 
     -- Restore the cargo inventory
     local trunkInventory = vehicle.get_inventory(defines.inventory.spider_trunk)
-    local r2 = saveRestoreLib.insertInventoryStacks(trunkInventory, wagon_data.items.trunk)
-    r1 = saveRestoreLib.mergeStackLists(r1, r2)
+    r1 = saveRestoreLib.mergeStackLists(r1, saveRestoreLib.insertInventoryStacks(trunkInventory, wagon_data.items.trunk))
 
     -- Restore the trash inventory
     local trashInventory = vehicle.get_inventory(defines.inventory.spider_trash)
-    local r2 = saveRestoreLib.insertInventoryStacks(trashInventory, wagon_data.items.trash)
-    r1 = saveRestoreLib.mergeStackLists(r1, r2)
+    r1 = saveRestoreLib.mergeStackLists(r1, saveRestoreLib.insertInventoryStacks(trashInventory, wagon_data.items.trash))
 
     -- Try to insert remainders into trunk and trash, spill whatever doesn't fit
     if r1 then
-      local r2 = saveRestoreLib.insertInventoryStacks(trunkInventory, r1)
-      local r3 = saveRestoreLib.insertInventoryStacks(trashInventory, r2)
+      local r3 = saveRestoreLib.insertInventoryStacks(trashInventory, saveRestoreLib.insertInventoryStacks(trunkInventory, r1))
       -- Spill items where the wagon is, not on the hidden surface
       if r3 then
         log({"vehicle-wagon2.migrate-spilled-stacks",loaded_wagon.surface, util.positiontostr(loaded_wagon.position)})

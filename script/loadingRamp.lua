@@ -264,7 +264,7 @@ end
 script.on_event({defines.events.on_player_rotated_entity, defines.events.on_player_flipped_entity}, OnRampRotatedOrFlipped)
 
 
-local function ProcessRailPlacedQueue(event)
+local function ProcessRailPlacedQueue()
   for surface_index, queue in pairs(storage.rail_placed_queues) do
     if next(queue) then
       -- Rails were placed on this surface
@@ -289,7 +289,6 @@ local function ProcessRailPlacedQueue(event)
               type = {"straight-rail", "legacy-straight-rail"},
               area = math2d.bounding_box.create_from_centre(ramp.position, 2*DISTANCE_RAMP_TO_RAIL)
             }
-            local ramp_entry = storage.loading_ramps[ramp_unit_number]
             local changed = false
             for _,rail in pairs(rails) do
               if queue_map[rail.unit_number] then
@@ -351,7 +350,6 @@ function OnRampOrStraightRailCreated(event)
   local surface = entity.surface
   local surface_index = surface.index
   local position = entity.position
-  local direction = entity.direction
   local unit_number = entity.unit_number
   if entity.name == "loading-ramp" then
     local ramp = entity
@@ -439,10 +437,10 @@ function OnLoadingRampOrRailDestroyed(event)
     else
       -- Not a ramp, check if it's a rail for any ramps
       local found = false
-      local rail_entry = storage.loading_rails[unit_number]
-      if rail_entry then
+      local loading_rail_entry = storage.loading_rails[unit_number]
+      if loading_rail_entry then
         found = true
-        for ramp_id,ramp in pairs(rail_entry) do
+        for ramp_id,ramp in pairs(loading_rail_entry) do
           if storage.loading_ramps[ramp_id] then
             storage.loading_ramps[ramp_id].loading_rail = nil
             if ramp.valid then
@@ -452,14 +450,14 @@ function OnLoadingRampOrRailDestroyed(event)
         end
       end
       -- Now check if it's an unloading rail for any ramps
-      local rail_entry = storage.unloading_rails[unit_number]
-      if rail_entry then
+      local unloading_rail_entry = storage.unloading_rails[unit_number]
+      if unloading_rail_entry then
         found = true
-        for ramp_id,ramp in pairs(rail_entry) do
-          local ramp_entry = storage.loading_ramps[ramp_id]
-          ramp_entry.unloading_rails[unit_number] = nil
-          if not next(ramp_entry.unloading_rails) then
-            ramp_entry.unloading_rails = nil
+        for ramp_id,ramp in pairs(unloading_rail_entry) do
+          local unloading_ramp_entry = storage.loading_ramps[ramp_id]
+          unloading_ramp_entry.unloading_rails[unit_number] = nil
+          if not next(unloading_ramp_entry.unloading_rails) then
+            unloading_ramp_entry.unloading_rails = nil
           end
           if ramp.valid then
             setRampVectors(ramp)

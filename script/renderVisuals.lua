@@ -236,8 +236,6 @@ function renderLoadingRamp(wagon, vehicle)
   local length_front = wagon.prototype.collision_box.left_top.y*0.8
   local length_back  = wagon.prototype.collision_box.right_bottom.y*0.8
   local wagon_angle  = wagon.orientation*2*math.pi
-  local wagon_front  = rot({x=0,y=length_front},wagon_angle)
-  local wagon_back   = rot({x=0,y=length_back},wagon_angle)
   local points = {{x=BED_WIDTH,y=length_back},
                   {x=-BED_WIDTH,y=length_back},
                   {x=BED_WIDTH,y=length_front},
@@ -245,8 +243,7 @@ function renderLoadingRamp(wagon, vehicle)
   local edges = {{1,2},{1,3},{3,4},{2,4}}
   local p = {x=vehicle.position.x - wagon.position.x, y=vehicle.position.y - wagon.position.y}
   
-  local closest_point = nil
-  local closest_distance = math.huge
+  local closest_point
   
   for i,edge in pairs(edges) do
     local from_offset=rot(points[edge[1]],wagon_angle)
@@ -293,8 +290,6 @@ function renderUnloadingRamp(wagon, position, vehicle_radius)
   local length_front = wagon.prototype.collision_box.left_top.y*0.8
   local length_back  = wagon.prototype.collision_box.right_bottom.y*0.8
   local wagon_angle  = wagon.orientation*2*math.pi
-  local wagon_front  = rot({x=0,y=length_front},wagon_angle)
-  local wagon_back   = rot({x=0,y=length_back},wagon_angle)
   local points = {{x=BED_WIDTH,y=length_back},
                   {x=-BED_WIDTH,y=length_back},
                   {x=BED_WIDTH,y=length_front},
@@ -302,7 +297,7 @@ function renderUnloadingRamp(wagon, position, vehicle_radius)
   local edges = {{1,2},{1,3},{3,4},{2,4}}
   local p = {x=position.x - wagon.position.x, y=position.y - wagon.position.y}
   
-  local closest_point = nil
+  local closest_point
   
   for i,edge in pairs(edges) do
     local from_offset=rot(points[edge[1]],wagon_angle)

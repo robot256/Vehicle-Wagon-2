@@ -143,7 +143,6 @@ end
 
 local function doesVehiclePassFilter(ramp, vehicle)
   -- Check inserter's filters
-  local vehicle_quality = vehicle.quality
   local filter_passed = true
   if ramp.use_filters then
     if ramp.inserter_filter_mode == "whitelist" then
@@ -152,13 +151,11 @@ local function doesVehiclePassFilter(ramp, vehicle)
         local filter = ramp.get_filter(slot_index)
         if filter then
           local name_passed = false
-          local quality_passed = false
+          local quality_passed = true
           if not filter.name or filter.name == vehicle.name then
             name_passed = true
           end
-          if not filter.quality then
-            quality_passed = true
-          else
+          if filter.quality then
             local filter_level = (type(filter.quality) == "string" and prototypes.quality[filter.quality].level) or filter.quality.level
             local vehicle_level = vehicle.quality.level
             local comparator = filter.comparator or "="
@@ -176,13 +173,11 @@ local function doesVehiclePassFilter(ramp, vehicle)
         local filter = ramp.get_filter(slot_index)
         if filter then
           local name_passed = false
-          local quality_passed = false
+          local quality_passed = true
           if not filter.name or filter.name == vehicle.name then
             name_passed = true
           end
-          if not filter.quality then
-            quality_passed = true
-          else
+          if filter.quality then
             local filter_level = (type(filter.quality) == "string" and prototypes.quality[filter.quality].level) or filter.quality.level
             local vehicle_level = vehicle.quality.level
             local comparator = filter.comparator or "="

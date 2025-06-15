@@ -32,7 +32,7 @@ function unloadVehicleWagon(action)
   end
 
   -- Make sure wagon exists
-  local loaded_unit_number = nil
+  local loaded_unit_number
   if not (loaded_wagon and loaded_wagon.valid) then
     if player then
       player.create_local_flying_text{text={"vehicle-wagon2.wagon-invalid-error"}}
@@ -85,12 +85,6 @@ function unloadVehicleWagon(action)
     return
   end
 
-  -- Assign unloaded wagon to player force, else wagon force
-  local force = loaded_wagon.force
-  if player then
-    force = player.force
-  end
-
   -- Validate the orientation setting and convert to approximate direction for create_entity
   if not unload_orientation then
     -- Place vehicle with same direction as the loaded wagon sprite by default.
@@ -103,10 +97,7 @@ function unloadVehicleWagon(action)
   if unload_orientation < 0 then
     unload_orientation = unload_orientation + 1
   end
-  local direction = math.floor(unload_orientation*8 + 0.5)
-  direction = math.fmod(direction, 8)
-
-
+  
   -- Teleport the vehicle back into place
   vehicle.orientation = unload_orientation
   if vehicle.teleport(unload_position, surface, true, false) then

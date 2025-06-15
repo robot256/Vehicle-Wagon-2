@@ -11,9 +11,6 @@
 
 local math2d = require("math2d")
 
-local useWeights = settings.startup["vehicle-wagon-use-custom-weights"].value
-local maxWeight = (useWeights and settings.startup["vehicle-wagon-maximum-weight"].value) or math.huge
-
 local vehicle_wagon = util.table.deepcopy(data.raw["cargo-wagon"]["cargo-wagon"])
 vehicle_wagon.name = "vehicle-wagon"
 vehicle_wagon.placeable_by = {item="vehicle-wagon", count=1}  -- Make this explicit so all deepcopies have the right value
