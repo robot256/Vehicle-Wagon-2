@@ -224,9 +224,11 @@ function OnRampRotatedOrFlipped(event)
     local rail = ramp_entry.loading_rail
     local rail_unit_number = rail.unit_number
     new_unloading_rails[rail_unit_number] = {rail=rail, dir_to_rail=old_ramp_dir}
-    storage.loading_rails[rail_unit_number][ramp_unit_number] = nil
-    if not next(storage.loading_rails[rail_unit_number]) then
-      storage.loading_rails[rail_unit_number] = nil
+    if storage.loading_rails[rail_unit_number] then
+      storage.loading_rails[rail_unit_number][ramp_unit_number] = nil
+      if not next(storage.loading_rails[rail_unit_number]) then
+        storage.loading_rails[rail_unit_number] = nil
+      end
     end
     storage.unloading_rails[rail_unit_number] = storage.unloading_rails[rail_unit_number] or {}
     storage.unloading_rails[rail_unit_number][ramp_unit_number] = ramp
@@ -346,7 +348,9 @@ end
 
 
 function OnRampOrStraightRailCreated(event)
-  local entity = event.entity
+  local entity = event.entity or event.destination
+  if not (entity and entity.valid) then return end
+  
   local surface = entity.surface
   local surface_index = surface.index
   local position = entity.position
@@ -403,9 +407,11 @@ function OnLoadingRampOrRailDestroyed(event)
       -- Unlink the loading rail, if any
       if ramp_entry.loading_rail and ramp_entry.loading_rail.valid then
         local rid = ramp_entry.loading_rail.unit_number
-        storage.loading_rails[rid][unit_number] = nil
-        if not next(storage.loading_rails[rid]) then
-          storage.loading_rails[rid] = nil
+        if storage.loading_rails[rid] then
+          storage.loading_rails[rid][unit_number] = nil
+          if not next(storage.loading_rails[rid]) then
+            storage.loading_rails[rid] = nil
+          end
         end
       end
       -- Unlink the unloading rails, if any
