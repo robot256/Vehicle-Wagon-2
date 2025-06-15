@@ -224,18 +224,16 @@ function OnRampRotatedOrFlipped(event)
     local rail = ramp_entry.loading_rail
     local rail_unit_number = rail.unit_number
     new_unloading_rails[rail_unit_number] = {rail=rail, dir_to_rail=old_ramp_dir}
-    if storage.loading_rails[rail_unit_number] then
-      storage.loading_rails[rail_unit_number][ramp_unit_number] = nil
-      if not next(storage.loading_rails[rail_unit_number]) then
-        storage.loading_rails[rail_unit_number] = nil
-      end
+    storage.loading_rails[rail_unit_number][ramp_unit_number] = nil
+    if not next(storage.loading_rails[rail_unit_number]) then
+      storage.loading_rails[rail_unit_number] = nil
     end
     storage.unloading_rails[rail_unit_number] = storage.unloading_rails[rail_unit_number] or {}
     storage.unloading_rails[rail_unit_number][ramp_unit_number] = ramp
   end
   
   -- Check if any unloading rails changed to loading rail
-  if ramp_entry.unloading_rails then
+  if ramp_entry.unloading_rails and next(ramp_entry.unloading_rails) then
     for rail_unit_number, rail_entry in pairs(ramp_entry.unloading_rails) do
       if rail_entry.dir_to_rail == new_ramp_dir then
         -- This one is in the new direction, move it to the other list
@@ -245,7 +243,7 @@ function OnRampRotatedOrFlipped(event)
         if not next(storage.unloading_rails[rail_unit_number]) then
           storage.unloading_rails[rail_unit_number] = nil
         end
-        storage.loading_rails[rail_unit_number] = storage.unloading_rails[rail_unit_number] or {}
+        storage.loading_rails[rail_unit_number] = storage.loading_rails[rail_unit_number] or {}
         storage.loading_rails[rail_unit_number][ramp_unit_number] = ramp
       else
         -- Still an unloading rail
@@ -407,15 +405,13 @@ function OnLoadingRampOrRailDestroyed(event)
       -- Unlink the loading rail, if any
       if ramp_entry.loading_rail and ramp_entry.loading_rail.valid then
         local rid = ramp_entry.loading_rail.unit_number
-        if storage.loading_rails[rid] then
-          storage.loading_rails[rid][unit_number] = nil
-          if not next(storage.loading_rails[rid]) then
-            storage.loading_rails[rid] = nil
-          end
+        storage.loading_rails[rid][unit_number] = nil
+        if not next(storage.loading_rails[rid]) then
+          storage.loading_rails[rid] = nil
         end
       end
       -- Unlink the unloading rails, if any
-      if ramp_entry.unloading_rails then
+      if ramp_entry.unloading_rails and next(ramp_entry.unloading_rails) then
         for rail_id,_ in pairs(ramp_entry.unloading_rails) do
           storage.unloading_rails[rail_id][unit_number] = nil
           if not next(storage.unloading_rails[rail_id]) then
@@ -447,11 +443,9 @@ function OnLoadingRampOrRailDestroyed(event)
       if loading_rail_entry then
         found = true
         for ramp_id,ramp in pairs(loading_rail_entry) do
-          if storage.loading_ramps[ramp_id] then
-            storage.loading_ramps[ramp_id].loading_rail = nil
-            if ramp.valid then
-              setRampVectors(ramp)
-            end
+          storage.loading_ramps[ramp_id].loading_rail = nil
+          if ramp.valid then
+            setRampVectors(ramp)
           end
         end
       end
