@@ -100,24 +100,26 @@ function unloadVehicleWagon(action)
   
   -- Teleport the vehicle back into place
   vehicle.orientation = unload_orientation
+
+  -- Vehicle must be made active (if necessary) before it is teleported, or
+  -- Autodrive will wrongly disable it on the GUI!
+  -- (If wagon_data.active was not set, the vehicle was active!)
+  vehicle.active = (wagon_data.active == nil)
+  vehicle.operable = (wagon_data.operable == nil)
+
   if vehicle.teleport(unload_position, surface, true, false) then
     -- Teleport was successful
-    if wagon_data.active == false then
-      vehicle.active = false
-    else
-      vehicle.active = true
-    end
-    if wagon_data.operable == false then
-      vehicle.operable = false
-    else
-      vehicle.operable = true
-    end
     local logipoint = vehicle.get_logistic_point(defines.logistic_member_index.spidertron_requester)
     if logipoint then
       logipoint.enabled = wagon_data.logistics_enabled or true
     end
   else
     -- Vehicle not teleported leave data and wagon as it is
+
+    -- Make vehicle inactive and inoperable again!
+    vehicle.active = false
+    vehicle.operable = false
+
     return
   end
 

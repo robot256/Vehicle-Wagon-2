@@ -55,15 +55,15 @@ local function OnPlayerSelectedArea(event)
       end
     end
   end
-  
+
   if wagon_height_error and #selected_loaded_wagons == 0 and #selected_empty_wagons == 0 then
     -- Only wagons user selected were elevated, so show error message
     if player then player.create_local_flying_text{text={"vehicle-wagon2.elevated-rail-error"}, position=message_target.position} end
     return
   end
 
-  -- Don't check GCKI data if the mod was uninstalled or setting turned off
-  local check_GCKI = remote.interfaces["GCKI"] and settings.global["vehicle-wagon-use-GCKI-permissions"].value
+  --~ -- Don't check GCKI data if the mod was uninstalled or setting turned off
+  --~ local check_GCKI = remote.interfaces["GCKI"] and settings.global["vehicle-wagon-use-GCKI-permissions"].value
 
   if event.name == defines.events.on_player_selected_area then
     -- Player used normal selection mode
@@ -84,6 +84,58 @@ local function OnPlayerSelectedArea(event)
       in_space = true
     end
   end
+
+  ----------------------------------------------------------------------------------
+  --                     Compatibility with GCKI and Autodrive                    --
+  ----------------------------------------------------------------------------------
+    -- Don't check GCKI permissions if the mod was uninstalled or setting turned off
+  local check_GCKI = remote.interfaces["GCKI"] and
+                      settings.global["vehicle-wagon-use-GCKI-permissions"].value
+
+  -- Don't check Autodrive permissions if the mod was uninstalled or setting turned off
+  local check_AD = remote.interfaces["autodrive"] and
+                    settings.global["vehicle-wagon-use-Autodrive-permissions"].value
+
+  -- Decide which interface to use for asking GCKI/Autodrive. Only 1 call is
+  -- needed: If GCKI is active, it will know about vehicles' Autodrive_owner.
+  local AD_GCKI = (check_GCKI and remote.interfaces.GCKI.can_load_unload_vehicle and "GCKI") or
+                  (check_AD and remote.interfaces.autodrive.can_load_unload_vehicle and "autodrive")
+
+  local function get_AD_GCKI_permission(check_player, vehicle, wagon)
+    --~ VW.entered_function({check_player, vehicle, wagon})
+
+    -- Return true if we can't check either of GCKI and Autodrive
+    local ret = true
+
+    -- Ask GCKI (preferred) or Autodrive for permission. There may be no player if called for a ramp.
+    if AD_GCKI and check_player and check_player.valid then
+      local pass_on = {player = check_player, vehicle = vehicle}
+
+      if AD_GCKI == "GCKI" then
+        pass_on.ask_Autodrive = check_AD
+      end
+
+      local blocked_by
+
+      -- If ret is not true, blocked_by will be the player that owns/locked the vehicle
+      ret, blocked_by = remote.call(AD_GCKI, "can_load_unload_vehicle", pass_on, script.mod_name)
+
+      if (not ret) and (blocked_by and blocked_by.valid) then
+        local action = wagon and "unload" or "load"
+        local msg = "vehicle-wagon2."..action.."-owned-or-locked-vehicle-error"
+        local v_name = vehicle.prototype.localised_name or vehicle.prototype.name
+        local pos = (wagon and wagon.valid and wagon.position) or
+                    (vehicle and vehicle.valid and vehicle.position)
+        check_player.create_local_flying_text{text = {msg, blocked_by.name, v_name}, position = pos}
+      end
+    end
+
+    --~ VW.entered_function("leave")
+    return ret
+  end
+  ----------------------------------------------------------------------------------
+  --                           End of compatibility code                          --
+  ----------------------------------------------------------------------------------
 
   ------------------------------------------------
   -- Loaded Wagon: Check if Valid to Unload
@@ -118,33 +170,12 @@ local function OnPlayerSelectedArea(event)
                                         position=loaded_wagon.position}
       end
 
-    elseif check_GCKI and storage.wagon_data[unit_number].GCKI_data and storage.wagon_data[unit_number].GCKI_data.locker and
-             storage.wagon_data[unit_number].GCKI_data.locker ~= player.index then
-      -- Error: vehicle was locked by someone else before it was loaded
-      -- Does not matter if that player exists or claimed a different vehicle, only that player can unload this one
-      local locker = game.players[storage.wagon_data[unit_number].GCKI_data.locker]
-      local vehicle_prototype = prototypes.entity[storage.wagon_data[unit_number].name]
-      if locker and locker.valid then
-        -- Player exists, display their name
-        if player then player.create_local_flying_text{text={"vehicle-wagon2.unload-locked-vehicle-error", vehicle_prototype.localised_name, locker.name}, position=loaded_wagon.position} end
-      else
-        -- Player no longer exists.  Should permission still apply?
-        if player then player.create_local_flying_text{text={"vehicle-wagon2.unload-locked-vehicle-error", vehicle_prototype.localised_name, "Player #"..tostring(storage.wagon_data[unit_number].GCKI_data.locker)}, position=loaded_wagon.position} end
-      end
+    elseif AD_GCKI and not get_AD_GCKI_permission(player, storage.wagon_data[unit_number].vehicle, loaded_wagon) then
+      -- luacheck: ignore (Ignore empty if-branch)
+      -- Error: vehicle is owned or was locked by someone else before it was loaded
+      -- (Error messages are issued by get_AD_GCKI_permission!)
 
-    elseif check_GCKI and storage.wagon_data[unit_number].GCKI_data and storage.wagon_data[unit_number].GCKI_data.owner and
-             storage.wagon_data[unit_number].GCKI_data.owner ~= player.index and
-             remote.call("GCKI", "owned_by_player", storage.wagon_data[unit_number].GCKI_data.owner) == nil then
-      -- Error: Unloading player is not previous owner, and previous owner has NOT claimed another vehicle in the meantime.
-      local owner = game.players[storage.wagon_data[unit_number].GCKI_data.owner]
-      local vehicle_prototype = prototypes.entity[storage.wagon_data[unit_number].name]
-      if owner and owner.valid then
-        -- Player exists, display their name
-        if player then player.create_local_flying_text{text={"vehicle-wagon2.unload-owned-vehicle-error", vehicle_prototype.localised_name, owner.name}, position=loaded_wagon.position} end
-      else
-        -- Player no longer exists.  Should permission still apply?
-        if player then player.create_local_flying_text{text={"vehicle-wagon2.unload-owned-vehicle-error", vehicle_prototype.localised_name, "Player #"..tostring(storage.wagon_data[unit_number].GCKI_data.owner)}, position=loaded_wagon.position} end
-      end
+
 
     elseif storage.action_queue[unit_number] and storage.action_queue[loaded_wagon.unit_number].status ~= "spider-load" then
       -- This wagon already has a pending action
@@ -179,7 +210,7 @@ local function OnPlayerSelectedArea(event)
       local vehicle_prototype = prototypes.entity[storage.wagon_data[unit_number].name]
       local max_distance = vehicle_prototype.radius + UNLOAD_RANGE
       local ramp_distance = distToWagon(wagon, ramp.position)
-    
+
       if storage.action_queue[unit_number] then
         -- This wagon already has a pending action
         if player then player.create_local_flying_text{text={"vehicle-wagon2.loaded-wagon-busy-error"}, position=wagon.position} end
@@ -211,7 +242,7 @@ local function OnPlayerSelectedArea(event)
       -- Clicked on an empty wagon without first clicking on a vehicle
       if player then player.create_local_flying_text{text={"vehicle-wagon2.no-vehicle-selected"}, position=ramp.position} end
     end
-  
+
   end
 
   --------------------------------
@@ -219,19 +250,6 @@ local function OnPlayerSelectedArea(event)
   if selected_vehicles[1] then
     local vehicle = selected_vehicles[1]
 
-    -- Compatibility with GCKI:
-    local owner = nil
-    local locker = nil
-    -- We can get along with fewer remote calls to GCKI!
-    if check_GCKI then
-      local v_data = remote.call("GCKI", "get_vehicle_data", vehicle)
-
-      -- Either or both of these may be set to a player
-      if v_data then
-        owner = v_data.owner and game.players[v_data.owner]
-        locker = v_data.locker and game.players[v_data.locker]
-      end
-    end
 
     if not storage.vehicleMap[vehicle.name] then
       if player then player.create_local_flying_text{text={"vehicle-wagon2.unknown-vehicle-error", vehicle.localised_name}, position=vehicle.position} end
@@ -246,13 +264,9 @@ local function OnPlayerSelectedArea(event)
       -- If it's not a Spidertron, can't load in space.
       if player then player.create_local_flying_text{text={"vehicle-wagon2.vehicle-in-space-error", vehicle.localised_name}, position=vehicle.position} end
 
-    elseif locker and locker ~= player then
-      -- Can't load someone else's locked vehicle
-      if player then player.create_local_flying_text{text={"vehicle-wagon2.load-locked-vehicle-error", vehicle.localised_name, locker.name}, position=vehicle.position} end
-
-    elseif owner and owner ~= player then
-      -- Can't load someone else's vehicle
-      if player then player.create_local_flying_text{text={"vehicle-wagon2.load-owned-vehicle-error", vehicle.localised_name, owner.name}, position=vehicle.position} end
+    elseif AD_GCKI and not get_AD_GCKI_permission(player, vehicle) then
+      -- Can't load vehicles locked or owned by someone else
+      -- (Error messages are issued by get_AD_GCKI_permission!)
 
     else
       -- Store vehicle selection
@@ -323,7 +337,7 @@ local function OnPlayerSelectedArea(event)
       if player then player.create_local_flying_text{text={"vehicle-wagon2.no-vehicle-selected"}, position=wagon.position} end
     end
   end
-  
+
   ---------------------------------------------
   -- Someplace Else: Check if valid to unlod selected loaded wagon
   if (#selected_vehicles == 0 and #selected_loaded_wagons == 0 and #selected_empty_wagons == 0 and #selected_ramps == 0) and

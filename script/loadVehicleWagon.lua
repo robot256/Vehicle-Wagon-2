@@ -64,6 +64,10 @@ function loadVehicleWagon(action)
   end
   vehicle.active = false  -- Disable vehicle before transport
   
+  if not vehicle.operable then
+    saveData.operable = false
+  end
+
   local logipoint = vehicle.get_logistic_point(defines.logistic_member_index.spidertron_requester)
   if logipoint then
     saveData.logistics_enabled = logipoint.enabled

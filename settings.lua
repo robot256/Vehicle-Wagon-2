@@ -87,12 +87,41 @@ data:extend({
   },
 })
 
+--~ data:extend({
+  --~ {
+    --~ type = "bool-setting",
+    --~ name = "vehicle-wagon-use-Autodrive-permissions",
+    --~ order = "ca",
+    --~ setting_type = "runtime-global",
+    --~ default_value = true
+  --~ },
+  --~ {
+    --~ type = "bool-setting",
+    --~ name = "vehicle-wagon-use-GCKI-permissions",
+    --~ order = "cb",
+    --~ setting_type = "runtime-global",
+    --~ default_value = true
+  --~ },
+--~ })
+if mods["autodrive"] then
+  data:extend({
+    {
+      type = "bool-setting",
+      name = "vehicle-wagon-use-Autodrive-permissions",
+      order = "ca",
+      setting_type = "runtime-global",
+      default_value = true
+    },
+  })
+end
+if mods["GCKI"] then
 data:extend({
   {
   type = "bool-setting",
   name = "vehicle-wagon-use-GCKI-permissions",
-  order = "cc",
+      order = "cb",
   setting_type = "runtime-global",
   default_value = true
   },
 })
+end

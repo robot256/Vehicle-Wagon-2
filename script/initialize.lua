@@ -20,7 +20,7 @@ require("script.makeGlobalMaps")
 
 
 function getUnminableStatus()
-  local unminable_enabled = (script.active_mods["unminable-vehicles"]) or 
+  local unminable_enabled = (script.active_mods["unminable-vehicles"]) or
            (script.active_mods["UnminableVehicles"] and settings.global["unminable_vehicles_make_unminable"].value)
   return unminable_enabled
 end
@@ -43,14 +43,14 @@ function RegisterFilteredEvents()
   -- FILTER = LoadedWagon, ItemOnGround
   script.on_event(defines.events.on_robot_pre_mined, OnRobotPreMined, mined_filters)
 
-  
+
   --== ON_MARKED_FOR_DECONSTRUCTION ==--
   -- When a wagon or car is marked for deconstruction, cancel any active loading or unloading orders or player selections
   local decon_filters = filterLib.generateNameFilter(storage.loadedWagonList, "vehicle-wagon")
   table.insert(decon_filters, {filter="type", type="car", mode="or"})
   table.insert(decon_filters, {filter="type", type="spider-vehicle", mode="or"})
   script.on_event(defines.events.on_marked_for_deconstruction, OnMarkedForDeconstruction, decon_filters)
-  
+
   --== ON_OBJECT_DESTROYED ==--
   -- Fires when registered entities are destroyed, mined, etc.
   -- We register loaded wagons, and any entity that's in the actions or player_selections queues.
@@ -75,7 +75,7 @@ function RegisterFilteredEvents()
   table.insert(cloned_filters, {filter="type", type="straight-rail"})
   table.insert(cloned_filters, {filter="type", type="legacy-straight-rail"})
   script.on_event(defines.events.on_entity_cloned, OnEntityCloned, cloned_filters)
-  
+
   -- On_Nth_Tick for Loading Ramp rail placement update
   RegisterRailPlacedNthTick()
 
@@ -104,10 +104,10 @@ function OnConfigurationChanged(event)
   makeGlobalMaps()
   -- Create loading ramp data tables if needed
   InitLoadingRampData()
-  
+
   -- Make sure the surface is hidden for everyone after migration
   hideSurfaceForAll()
-  
+
   -- Purge data for any entities that were removed
   -- Migrations should already have added "wagon" and "vehicle" entity references to each valid entry
   for id,data in pairs(storage.wagon_data) do
@@ -121,7 +121,7 @@ function OnConfigurationChanged(event)
     end
   end
 
-  local gcki_enabled = script.active_mods["GCKI"] and settings.global["vehicle-wagon-use-GCKI-permissions"].value
+  --~ local gcki_enabled = script.active_mods["GCKI"] and settings.global["vehicle-wagon-use-GCKI-permissions"].value
   local unminable_enabled = getUnminableStatus()
 
   -- Run when GCKI is uninstalled:
@@ -171,6 +171,54 @@ function OnConfigurationChanged(event)
     end
   end
 
+  -- Migrate GCKI_data stored in storage.wagon_data?
+  if script.active_mods["GCKI"] and storage.wagon_data then
+    log("Looking for GCKI_data to migrate!")
+    local GCKI_data = {}
+    local vehicle
+    for w, wagon_data in pairs(storage.wagon_data) do
+      if wagon_data.GCKI_data then
+        vehicle = wagon_data.vehicle
+        if vehicle and vehicle.valid then
+          GCKI_data[vehicle.unit_number] = table.deepcopy(wagon_data.GCKI_data)
+          GCKI_data[vehicle.unit_number].entity = vehicle
+        end
+        wagon_data.GCKI_data = nil
+      end
+    end
+
+    if next(GCKI_data) then
+      log("Trying to transfer data of "..table_size(GCKI_data).." vehicles!")
+      if remote.interfaces.GCKI and remote.interfaces.GCKI.vehicle_wagons_migration then
+        remote.call("GCKI", "vehicle_wagons_migration", GCKI_data)
+      end
+    end
+  end
+
+  -- Migrate autodrive_data stored in storage.wagon_data?
+  if script.active_mods["autodrive"] and storage.wagon_data then
+    log("Looking for autodrive_data to migrate!")
+    local autodrive_data = {}
+    local vehicle
+    for w, wagon_data in pairs(storage.wagon_data) do
+      if wagon_data.autodrive_data then
+        vehicle = wagon_data.vehicle
+        if vehicle and vehicle.valid then
+          autodrive_data[vehicle.unit_number] = table.deepcopy(wagon_data.autodrive_data)
+          autodrive_data[vehicle.unit_number].entity = vehicle
+        end
+        wagon_data.autodrive_data = nil
+      end
+    end
+
+    if next(autodrive_data) then
+      log("Trying to transfer data of "..table_size(autodrive_data).." vehicles!")
+      if remote.interfaces.autodrive and remote.interfaces.autodrive.vehicle_wagons_migration then
+        remote.call("autodrive", "vehicle_wagons_migration", autodrive_data)
+      end
+    end
+  end
+
   -- Run when unminable_enabled status changes due to mods or settings
   if storage.unminable_enabled ~= unminable_enabled then
     -- Store new value in global
@@ -181,7 +229,7 @@ function OnConfigurationChanged(event)
     end
     storage.unminable_enabled = unminable_enabled
   end
-  
+
   -- Run when inventory slots setting Changes
   local new_slots_setting = settings.startup["vehicle-wagon-inventory-slots"].value
   if not storage.slots_setting or new_slots_setting ~= storage.slots_setting then
