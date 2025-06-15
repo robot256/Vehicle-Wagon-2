@@ -68,10 +68,7 @@ data:extend{
   {
     type = "inserter",
     name = "loading-ramp",
-    icons = {{icon = "__base__/graphics/icons/shapes/shape-circle.png",
-              tint = {1,1,0,1}},
-             {icon = "__base__/graphics/icons/shapes/shape-diagonal-cross.png",
-              tint = {1,1,0,1}}},
+    icons = {{icon = "__vehicle-wagon-graphics__/graphics/ramp/ramp_icon.png"}},
     flags = {"placeable-neutral", "placeable-player", "player-creation"},
     minable = {mining_time = 1, result = "loading-ramp"},
     max_health = 1000,
@@ -127,10 +124,7 @@ data:extend{
   {
 		type = "item",
 		name = "loading-ramp",
-		icons = {{icon = "__base__/graphics/icons/shapes/shape-circle.png",
-              tint = {1,1,0,1}},
-             {icon = "__base__/graphics/icons/shapes/shape-diagonal-cross.png",
-              tint = {1,1,0,1}}},
+		icons = {{icon = "__vehicle-wagon-graphics__/graphics/ramp/ramp_icon.png"}},
     subgroup = "transport",
 		order = "a[train-system]-w[loading-ramp]",
 		place_result = "loading-ramp",
@@ -152,8 +146,7 @@ data:extend({
   {
     type = "technology",
     name = "vehicle-loading-ramps",
-    icon = "__vehicle-wagon-graphics__/graphics/tech-icon.png",
-    icon_size = 128,
+    icons = {{icon = "__vehicle-wagon-graphics__/graphics/ramp/ramp_tech_icon.png", icon_size = 96}},
     effects =
     {
       {
