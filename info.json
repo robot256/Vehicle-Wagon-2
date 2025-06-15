@@ -8,7 +8,7 @@
     "contact": "https://forums.factorio.com/memberlist.php?mode=viewprofile&u=63685",
     "dependencies": [
       "base >= 2.0.26",
-      "vehicle-wagon-graphics",
+      "vehicle-wagon-graphics >= 1.0.1",
       "Robot256Lib"
     ],
     "description": "Winch vehicles onto trains and go for a ride!"

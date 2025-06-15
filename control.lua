@@ -270,30 +270,6 @@ script.on_event(defines.events.on_pre_player_removed, onPrePlayerRemoved)
 ----------------------------
 -- MOD INTERFACE FUNCTIONS
 
---~ -- Allow Gizmo's Car Keys to manipulate loaded vehicles
---~ function release_owned_by_player(p)
-  --~ local player_index = p
-  --~ if type(p) ~= "number" then
-    --~ player_index = p.index
-  --~ end
-
-  --~ for wagon_id,data in pairs(storage.wagon_data) do
-    --~ if data.GCKI_data then
-      --~ if data.GCKI_data.owner and data.GCKI_data.owner == player_index then
-        --~ -- Owner was removed
-        --~ data.GCKI_data.owner = nil
-        --~ -- If UnminableVehicles is not enabled, update minable states.
-        --~ if not storage.unminable_enabled then
-          --~ -- Make wagon minable when it belongs to no one
-          --~ if not (data.GCKI_data.owner or data.GCKI_data.locker) and data.wagon and data.wagon.valid then
-            --~ data.wagon.minable_flag = true
-          --~ end
-        --~ end
-      --~ end
-    --~ end
-  --~ end
---~ end
-
 -- Returns a copy of the loaded vehicle data for the wagon entity.
 function get_wagon_data(wagon)
   if wagon and wagon.valid and storage.wagon_data and storage.wagon_data[wagon.unit_number] then
@@ -542,43 +518,7 @@ function OnObjectDestroyed(event)
         else
           game.print{"vehicle-wagon2.wagon-destroyed", "#"..unit_number.." ", vehicle_name}
         end
-
-        -----------------------------------------------------------------------------------------------
-        -- As of version 2.0.0, both GCKI and Autodrive will listen to on_object_destroyed, so this  --
-        -- is no longer needed!                                                                      --
-        -----------------------------------------------------------------------------------------------
-        --~ -- As of version 1.1.2/1.1.3, GCKI and Autodrive will allow players to add a
-        --~ -- custom name to vehicles, the prototype is used by the respective mod or not.
-        --~ -- When a vehicle is loaded on a vehicle wagon, the custom name will be
-        --~ -- reserved until the vehicle is unloaded again. When the vehicle wagon is
-        --~ -- destroyed before it could be unloaded, GCKI and Autodrive should remove the
-        --~ -- name from its list, so it can be used again for another vehicle.
-        --~ --log("storage.wagon_data["..entity.unit_number.."]: "..serpent.line(storage.wagon_data[entity.unit_number]))
-        --~ --log("remote.interfaces[\"autodrive\"]: "..serpent.block(remote.interfaces["autodrive"]))
-        --~ if storage.wagon_data[unit_number].autodrive_data and
-            --~ remote.interfaces["autodrive"] and
-            --~ remote.interfaces["autodrive"].vehicle_proxy_destroyed then
-
-          --~ log("Vehicle wagon loaded with an Autodrive vehicle was destroyed. Calling remote.interfaces[\"autodrive\"].vehicle_proxy_destroyed()!")
-          --~ remote.call("autodrive", "vehicle_proxy_destroyed", {
-            --~ autodrive_data = storage.wagon_data[unit_number].autodrive_data,
-            --~ mod_name = script.mod_name,
-          --~ })
-
-        --~ -- If Autodrive is active, it will inform GCKI that the name should be removed,
-        --~ -- so we can skip the call to GCKI!
-        --~ elseif storage.wagon_data[unit_number].GCKI_data and
-            --~ remote.interfaces["GCKI"] and
-            --~ remote.interfaces["GCKI"].vehicle_proxy_destroyed then
-
-          --~ log("Vehicle wagon loaded with a GCKI_vehicle was destroyed. Calling remote.interfaces[\"GCKI\"].vehicle_proxy_destroyed()!")
-          --~ remote.call("GCKI", "vehicle_proxy_destroyed", {
-            --~ GCKI_data = storage.wagon_data[unit_number].GCKI_data,
-            --~ mod_name = script.mod_name,
-          --~ })
-        --~ end
-        -----------------------------------------------------------------------------------------------
-        end
+      end
 
       deleteWagon(unit_number)
 
@@ -724,22 +664,6 @@ function cmd_debug(params)
 end
 commands.add_command("vehicle-wagon-debug", {"command-help.vehicle-wagon-debug"}, cmd_debug)
 
-------------------------------------------------------------------------------------
---                    FIND LOCAL VARIABLES THAT ARE USED GLOBALLY                 --
---                              (Thanks to eradicator!)                           --
-------------------------------------------------------------------------------------
---~ setmetatable(_ENV,{
-  --~ __newindex=function (self,key,value) --locked_global_write
-    --~ error('\n\n[ER Global Lock] Forbidden global *write*:\n'
-      --~ .. serpent.line{key=key or '<nil>',value=value or '<nil>'}..'\n')
-    --~ end,
-  --~ __index   =function (self,key) --locked_global_read
-      --~ if key ~= "game" and key ~= "mods" and key ~= "data" then
-    --~ error('\n\n[ER Global Lock] Forbidden global *read*:\n'
-      --~ .. serpent.line{key=key or '<nil>'}..'\n')
-      --~ end
-    --~ end ,
-  --~ })
 do
   -- luacheck: no unused (Inline option for luacheck: ignore unused vars in block)
 
@@ -749,6 +673,10 @@ do
     mods = true,
   }
 
+------------------------------------------------------------------------------------
+--                    FIND LOCAL VARIABLES THAT ARE USED GLOBALLY                 --
+--                              (Thanks to eradicator!)                           --
+------------------------------------------------------------------------------------
   setmetatable(_ENV, {
     __newindex  = function(self, key, value)    -- locked_global_write
       error('\n\n[ER Global Lock] Forbidden global *write*:\n' ..
@@ -762,6 +690,5 @@ do
     end
   })
 end
-
 
 if script.active_mods["gvv"] then require("__gvv__.gvv")() end
