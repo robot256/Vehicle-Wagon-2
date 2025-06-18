@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.1.11
+Date: 2025-06-18
+  Bugfixes:
+    - Fixed that Autodrive/GCKI permission lock state was not correctly migrated.
+    - Added missing locale keys for Autodrive/GCKI error messages.
+---------------------------------------------------------------------------------------------------
 Version: 4.1.10
 Date: 2025-06-18
   Bugfixes:
