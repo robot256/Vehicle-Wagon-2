@@ -37,3 +37,48 @@ for _,train in pairs(game.train_manager.get_trains{is_manual=true, stock=wagon_l
   storage.manual_trains[train.id] = {train=train, ramps={}}
   script.register_on_object_destroyed(train)
 end
+
+-- Delete unreferenced rendering objects
+local all_objects = rendering.get_all_objects("VehicleWagon2")
+if all_objects and #all_objects > 0 then
+  -- Get list of all the objects we know about
+  local known_objects = {}
+  for player_index, entry in pairs(storage.player_selection) do
+    if entry.visuals then
+      for k=1,#entry.visuals do
+        table.insert(known_objects, entry.visuals[k])
+      end
+    end
+  end
+  for wagon_number, wagon_data in pairs(storage.wagon_data) do
+    if wagon_data.icon then
+      for k=1,#wagon_data.icon do
+        table.insert(known_objects, wagon_data.icon[k])
+      end
+    end
+  end
+  -- Find which are unknown
+  local unknown_objects
+  if #known_objects==0 then
+    unknown_objects = all_objects
+  else
+    unknown_objects = {}
+    for j=1,#all_objects do
+      local found = false
+      for k=1,#known_objects do
+        if all_objects[j] == known_objects[k] then
+          found = true
+          break
+        end
+      end
+      if not found then
+        table.insert(unknown_objects, all_objects[j])
+      end
+    end
+  end
+  -- Destroy the unknown objects
+  for m=1,#unknown_objects do
+    unknown_objects[m].destroy()
+  end
+  log("Destroyed "..tostring(#unknown_objects).." orphaned rendering objects")
+end

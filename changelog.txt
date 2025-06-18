@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.1.10
+Date: 2025-06-18
+  Bugfixes:
+    - Fixed a bug in the loading ramp table migration fix that broke it even more.
+    - Fixed that automatic loading and unloading was rendering shapes and never deleting them (fixing a potential source of save file bloat/memory leak).
+    - Added migration script to clean up old rendering objects.
+---------------------------------------------------------------------------------------------------
 Version: 4.1.9
 Date: 2025-06-17
   Changes:

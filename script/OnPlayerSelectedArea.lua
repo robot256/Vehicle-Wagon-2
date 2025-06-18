@@ -184,13 +184,17 @@ local function OnPlayerSelectedArea(event)
     else
       local vehicle_prototype = prototypes.entity[storage.wagon_data[unit_number].name]
       -- Select vehicle as unloading source
-      if player then player.play_sound{path = "latch-on"} end
-
+      local player_visuals
+      if player then
+        player.play_sound{path = "latch-on"}
+        player_visuals = renderWagonVisuals(player,loaded_wagon,vehicle_prototype.radius)
+      end
+      
       -- Record selection and create radius circle
       storage.player_selection[index] = {
           wagon = loaded_wagon,
           wagon_unit_number = loaded_wagon.unit_number,
-          visuals = renderWagonVisuals(player,loaded_wagon,vehicle_prototype.radius)
+          visuals = player_visuals
         }
       updateOnTickStatus(true)
     end
@@ -270,12 +274,16 @@ local function OnPlayerSelectedArea(event)
 
     else
       -- Store vehicle selection
-      if player then player.play_sound{path = "latch-on"} end
+      local player_visuals
+      if player then
+        player.play_sound{path = "latch-on"}
+        player_visuals = renderVehicleVisuals(player, vehicle)
+      end
 
       storage.player_selection[index] = {
           vehicle = vehicle,
           vehicle_unit_number = vehicle.unit_number,
-          visuals = renderVehicleVisuals(player, vehicle)
+          visuals = player_visuals
         }
       script.register_on_object_destroyed(vehicle)  -- Register the vehicle so we know if it's destroyed and we stop the animation
       updateOnTickStatus(true)
