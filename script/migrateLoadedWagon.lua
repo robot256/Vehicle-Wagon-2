@@ -22,7 +22,7 @@ function migrateLoadedWagon(loaded_unit_number)
     log({"vehicle-wagon2.migrate-data-error", loaded_unit_number})
     return
   end
-  
+
   -- Make sure wagon exists
   local loaded_wagon = wagon_data.wagon
   if not(loaded_wagon and loaded_wagon.valid) then
@@ -36,17 +36,17 @@ function migrateLoadedWagon(loaded_unit_number)
   -- Find a valid unload position on the hidden surface
   local surface = getHiddenSurface()
   local unload_position = getTeleportCoordinate() --surface.find_non_colliding_position(wagon_data.name, {0,0}, 0, 1)
-  
+
   -- If we still can't find a position, give up
   if not unload_position then
     log({"vehicle-wagon2.migrate-vehicle-error", loaded_unit_number, wagon_data.name})
     storage.wagon_data[loaded_unit_number] = nil
     return
   end
-  
+
   -- Assign unloaded wagon to player force, else wagon force
   local force = loaded_wagon.force
-  
+
   -- Create the vehicle
   local vehicle = surface.create_entity{
                       name = wagon_data.name,
@@ -73,7 +73,7 @@ function migrateLoadedWagon(loaded_unit_number)
       end
     end
   end
-  
+
   -- Set vehicle user to the player who unloaded, or the saved last user if unloaded automatically
   if wagon_data.last_user and game.players[wagon_data.last_user] then
     vehicle.last_user = game.players[wagon_data.last_user]
@@ -94,6 +94,12 @@ function migrateLoadedWagon(loaded_unit_number)
   if wagon_data.rotatable == false then vehicle.rotatable = false end
   if wagon_data.enable_logistics_while_moving == false then
     vehicle.enable_logistics_while_moving = false
+  end
+
+  -- Update stored data to reflect GCKI's "locked" status
+  if (wagon_data.GCKI_data and wagon_data.GCKI_data.locker) or
+      (wagon_data.autodrive_data and wagon_data.autodrive_data.GCKI_locker) then
+    wagon_data.active = false
   end
 
   -- Restore burner
@@ -179,7 +185,7 @@ function migrateLoadedWagon(loaded_unit_number)
     end
 
   end
-  
+
   -- Make sure the vehicle is disabled and logistics are off
   vehicle.operable = false
   local point = vehicle.get_logistic_point(defines.logistic_member_index.spidertron_requester)
@@ -201,7 +207,8 @@ function migrateLoadedWagon(loaded_unit_number)
       wagon=loaded_wagon,
       vehicle=vehicle,
       name=vehicle.name,
-      operable=wagon_data.operable, 
+      active=wagon_data.active,
+      operable=wagon_data.operable,
       logistics_enabled=true,
       icon=wagon_data.icon,
       GCKI_data = wagon_data.GCKI_data,
