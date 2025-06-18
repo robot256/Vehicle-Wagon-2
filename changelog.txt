@@ -1,13 +1,16 @@
 ---------------------------------------------------------------------------------------------------
 Version: 4.1.9
-Date: 2025-06-15
+Date: 2025-06-17
   Changes:
     - Added better item icon and tech icon for loading ramps.
-    - Updated compatibility code for Autodrive and GCKI 2.0.
+    - Updated compatibility code for Autodrive and GCKI 2.0 (thanks to Pi-C).
   Bugfixes:
-    - Fixed that maximum weight setting was not re-applied in data-final-fixes.
+    - Fixed that placing two ramps by the same rail and rotating one of them could corrupt the data table.
+    - Added a migration to fix corrupted ramp data tables in existing save files.
+    - Fixed that the maximum vehicle weight setting was not re-applied if weight stats changed in data-final-fixes.
     - Fixed multiple potential crashes and incorrect log messages in migration scripts when loading a save from 1.1.
     - Fixed potential crash when robot unloads a corrupted vehicle wagon.
+    - Removed console spam when unloading with ramps.
 ---------------------------------------------------------------------------------------------------
 Version: 4.1.8
 Date: 2025-06-14

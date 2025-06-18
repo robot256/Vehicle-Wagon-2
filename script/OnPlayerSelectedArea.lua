@@ -49,7 +49,7 @@ local function OnPlayerSelectedArea(event)
         end
       elseif entity.name == "loading-ramp" then
         table.insert(selected_ramps, entity)
-        game.print("Selected ramp "..tostring(entity))
+        --game.print("Selected ramp "..tostring(entity))
       elseif (entity and entity.valid and (entity.type == "car" or entity.type == "spider-vehicle")) then
         table.insert(selected_vehicles, entity)
       end
