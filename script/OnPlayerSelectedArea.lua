@@ -50,7 +50,7 @@ local function OnPlayerSelectedArea(event)
       elseif entity.name == "loading-ramp" then
         table.insert(selected_ramps, entity)
         --game.print("Selected ramp "..tostring(entity))
-      elseif (entity and entity.valid and (entity.type == "car" or entity.type == "spider-vehicle")) then
+      elseif entity.type == "car" or entity.type == "spider-vehicle" then
         table.insert(selected_vehicles, entity)
       end
     end
@@ -145,11 +145,7 @@ local function OnPlayerSelectedArea(event)
     -- Clicked on a Loaded Wagon
     local unit_number = loaded_wagon.unit_number
 
-    if loaded_wagon.get_driver() then
-      -- Can't unload while passenger in wagon
-      if player then player.create_local_flying_text{text={"vehicle-wagon2.wagon-passenger-error"}, position=loaded_wagon.position} end
-
-    elseif loaded_wagon.train.speed ~= 0 then
+    if loaded_wagon.train.speed ~= 0 then
       -- Can't unload while train is moving
       if player then player.create_local_flying_text{text={"vehicle-wagon2.train-in-motion-error"}, position=loaded_wagon.position} end
 
@@ -258,9 +254,6 @@ local function OnPlayerSelectedArea(event)
     if not storage.vehicleMap[vehicle.name] then
       if player then player.create_local_flying_text{text={"vehicle-wagon2.unknown-vehicle-error", vehicle.localised_name}, position=vehicle.position} end
 
-    elseif get_driver_or_passenger(vehicle) then
-      if player then player.create_local_flying_text{text={"vehicle-wagon2.vehicle-passenger-error"}, position=vehicle.position} end
-
     elseif is_vehicle_moving(vehicle) then
       if player then player.create_local_flying_text{text={"vehicle-wagon2.vehicle-in-motion-error"}, position=vehicle.position} end
 
@@ -307,10 +300,6 @@ local function OnPlayerSelectedArea(event)
         -- Selected vehicle no longer exists
         clearSelection(index)
         if player then player.create_local_flying_text{text={"vehicle-wagon2.vehicle-invalid-error"}, position=wagon.position} end
-      elseif get_driver_or_passenger(vehicle) then
-        -- Selected vehicle has an occupant
-        clearSelection(index)
-        if player then player.create_local_flying_text{text={"vehicle-wagon2.vehicle-passenger-error"}, position=wagon.position} end
       elseif storage.action_queue[wagon.unit_number] and storage.action_queue[wagon.unit_number].status ~= "spider-load" then
         -- This wagon already has a pending action (ignore spiders following it)
         if player then player.create_local_flying_text{text={"vehicle-wagon2.empty-wagon-busy-error"}, position=wagon.position} end

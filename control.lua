@@ -93,21 +93,6 @@ script.on_load(function()
 end)
 
 
--- Figure out of a character is driving or riding this car, spider, or wagon
-function get_driver_or_passenger(entity)
-  -- Check if we have a driver that is not an AAI character:
-  local driver = entity.get_driver()
-  if driver and not string.find(driver.name, "%-_%-driver") then
-    return driver
-  end
-
-  -- Otherwise check if we have a passenger, which will error if entity is not a car:
-  local status, resp = pcall(entity.get_passenger)
-  if not status then return nil end
-  return resp
-end
-
-
 -- Determine if the vehicle is moving.
 -- Use speed and spider autopilot if present.
 function is_vehicle_moving(vehicle)
@@ -187,8 +172,6 @@ function process_tick(event)
           if player then player.create_local_flying_text{text={"vehicle-wagon2.vehicle-invalid-error"}} end
         elseif not wagon or not wagon.valid then
           if player then player.create_local_flying_text{text={"vehicle-wagon2.wagon-invalid-error"}} end
-        elseif get_driver_or_passenger(vehicle) then
-          if player then player.create_local_flying_text{text={"vehicle-wagon2.vehicle-passenger-error"}, position=vehicle.position} end
         elseif wagon.train.speed ~= 0 then
           if player then player.create_local_flying_text{text={"vehicle-wagon2.train-in-motion-error"}, position=wagon.position} end
         else
@@ -203,8 +186,6 @@ function process_tick(event)
         -- Check that the wagon indicated by the player is a valid target for unloading
         if not wagon or not wagon.valid then
           if player then player.create_local_flying_text{text={"vehicle-wagon2.wagon-invalid-error"}} end
-        elseif wagon.get_driver() then
-          if player then player.create_local_flying_text{text={"vehicle-wagon2.wagon-passenger-error"}, position=wagon.position} end
         elseif wagon.train.speed ~= 0 then
           if player then player.create_local_flying_text{text={"vehicle-wagon2.train-in-motion-error"}, position=wagon.position} end
         else

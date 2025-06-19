@@ -81,6 +81,34 @@ function loadVehicleWagon(action)
 --    driver.destroy()
 --  end
 
+  -- Transfer first vehicle occupant to loaded wagon
+  local driver = vehicle.get_driver()
+  local passenger = (vehicle.type == "car" and vehicle.get_passenger()) or nil
+  local player_transferred = false
+  -- Eject both occupants from vehicle
+  vehicle.set_driver(nil)
+  if vehicle.type == "car" then
+    vehicle.set_passenger(nil)
+  end
+  -- Process driver
+  if driver then
+    if string.find(driver.name, "%-_%-driver") then
+      driver.destroy()
+    else
+      loaded_wagon.set_driver(driver)
+      player_transferred = true
+    end
+  end
+  -- Process passenger
+  if passenger then
+    if string.find(passenger.name, "%-_%-driver") then
+      passenger.destroy()
+    elseif not player_transferred then
+      loaded_wagon.set_driver(passenger)
+      player_transferred = true
+    end
+  end
+
   -- Teleport vehicle to hidden surface
   -- Find a valid unload position on the hidden surface
   local destsurface = getHiddenSurface()

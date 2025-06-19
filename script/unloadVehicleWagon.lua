@@ -107,20 +107,29 @@ function unloadVehicleWagon(action)
   vehicle.active = (wagon_data.active == nil)
   vehicle.operable = (wagon_data.operable == nil)
 
-  if vehicle.teleport(unload_position, surface, true, false) then
-    -- Teleport was successful
-    local logipoint = vehicle.get_logistic_point(defines.logistic_member_index.spidertron_requester)
-    if logipoint then
-      logipoint.enabled = wagon_data.logistics_enabled or true
-    end
-  else
-    -- Vehicle not teleported leave data and wagon as it is
+  if not vehicle.teleport(unload_position, surface, true, false) then
+    -- Vehicle not teleported. leave data and wagon as it is
 
     -- Make vehicle inactive and inoperable again!
     vehicle.active = false
     vehicle.operable = false
 
     return
+  end
+
+  -- Teleport was successful
+  
+  -- Reenable logistics
+  local logipoint = vehicle.get_logistic_point(defines.logistic_member_index.spidertron_requester)
+  if logipoint then
+    logipoint.enabled = wagon_data.logistics_enabled or true
+  end
+  
+  -- Transfer player from wagon to vehicle, if any
+  local driver = loaded_wagon.get_driver()
+  if driver then
+    loaded_wagon.set_driver(nil)
+    vehicle.set_driver(driver)
   end
 
   -- Play sound associated with creating the vehicle
