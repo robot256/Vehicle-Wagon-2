@@ -125,11 +125,30 @@ function unloadVehicleWagon(action)
     logipoint.enabled = wagon_data.logistics_enabled or true
   end
   
+  -- Delete the excess AI character, if any
+  local passenger = (vehicle.type == "car" and vehicle.get_passenger()) or nil
+  if passenger then
+    -- Eject passenger regardless
+    if string.find(passenger.name, "%-_%-driver") then
+      -- If AAI driver was in passenger slot, eject and destroy it
+      game.print("Killing AI passenger")
+      vehicle.set_passenger(nil)
+      passenger.destroy()
+    end
+  end
+  -- Verify passenger was removed
+  passenger = (vehicle.type == "car" and vehicle.get_passenger()) or nil
+  
   -- Transfer player from wagon to vehicle, if any
   local driver = loaded_wagon.get_driver()
   if driver then
     loaded_wagon.set_driver(nil)
-    vehicle.set_driver(driver)
+    if not vehicle.get_driver() then
+      vehicle.set_driver(driver)
+    elseif vehicle.type == "car" and not passenger then
+      -- If driver slot is occuped by AAI Driver, put wagon driver in passenger slot
+      vehicle.set_passenger(driver)
+    end
   end
 
   -- Play sound associated with creating the vehicle
