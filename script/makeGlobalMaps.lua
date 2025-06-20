@@ -46,6 +46,8 @@ function makeGlobalMaps()
       storage.vehicleMap[k] = nil
     elseif k and string.find(k,"se%-spaceship") then
       storage.vehicleMap[k] = nil
+    elseif k == "se-character-_-seat" then
+      storage.vehicleMap[k] = nil
     elseif k == "shield-projector-barrier" then
       storage.vehicleMap[k] = nil
     elseif k and string.find(k,"burbulator") then
