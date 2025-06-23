@@ -74,8 +74,15 @@ local function findTrainsForRamp(ramp)
     if wagons[1] then
       local wagon = wagons[1]
       local train = wagon.train
-      -- unloading_rail_index is always set after calling setRampVectors()
-      addUnloadingRampToTrain(ramp, ramp_entry.unloading_rails[ramp_entry.unloading_rail_index], train, wagon, storage.wagon_data[wagon.unit_number].vehicle)
+      local wagon_data = storage.wagon_data[wagon.unit_number]
+      if wagon_data then
+        -- unloading_rail_index is always set after calling setRampVectors()
+        addUnloadingRampToTrain(ramp, ramp_entry.unloading_rails[ramp_entry.unloading_rail_index], train, wagon, wagon_data.vehicle)
+      else
+        -- Wagon has no data attached to it.  Replace with empty wagon
+        deleteWagon(wagon.unit_number)
+        replaceCarriage(wagon, "vehicle-wagon", false, false)
+      end
     end
   end
 end

@@ -109,7 +109,15 @@ local function OnTrainChangedState(event)
             for wagon_id,wagon in pairs(loaded_wagons) do
               if math2d.bounding_box.contains_point(wagon.bounding_box, ramp.pickup_position) then
                 -- This wagon is in the pickup zone of this ramp
-                addUnloadingRampToTrain(ramp, rail, train, wagon, storage.wagon_data[wagon.unit_number].vehicle)
+                local wagon_data = storage.wagon_data[wagon.unit_number]
+                if wagon_data then
+                  -- unloading_rail_index is always set after calling setRampVectors()
+                  addUnloadingRampToTrain(ramp, rail, train, wagon, wagon_data.vehicle)
+                else
+                  -- Wagon has no data attached to it.  Replace with empty wagon
+                  deleteWagon(wagon.unit_number)
+                  replaceCarriage(wagon, "vehicle-wagon", false, false)
+                end
               end
             end
           end
