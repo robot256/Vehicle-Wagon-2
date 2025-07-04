@@ -47,9 +47,6 @@ function loadVehicleWagon(action)
   local unit_number = loaded_wagon.unit_number
   loaded_wagon.color = vehicle.color
   
-  -- Prevent player from opening shadow inventory
-  loaded_wagon.operable = false
-  
   local saveData = {}
 
   -- Save reference to loaded wagon entity
@@ -90,6 +87,7 @@ function loadVehicleWagon(action)
   local destposition = getTeleportCoordinate()
   if vehicle.teleport(destposition, destsurface, true, false) then
     -- Put the shadow item in the loaded wagon inventory
+    loaded_wagon.clear_items_inside()
     if loaded_wagon.insert({name=getVehicleItem(vehicle.name), count=1, quality=vehicle.quality}) ~= 1 then
       -- Put an icon on the wagon showing contents
       saveData.icon = renderIcon(loaded_wagon, vehicle.name)

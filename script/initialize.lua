@@ -60,7 +60,6 @@ function RegisterFilteredEvents()
   --== SCRIPT_RAISED_BUILT ==--
   -- Detect when loaded wagons are built incorrectly by scripts and convert them to empty wagons.
   local built_filters = filterLib.generateGhostFilter(storage.loadedWagonList)
-  table.insert(built_filters, {filter="name", name="vehicle-wagon"})
   table.insert(built_filters, {filter="name", name="loading-ramp"})
   table.insert(built_filters, {filter="type", type="straight-rail"})
   table.insert(built_filters, {filter="type", type="legacy-straight-rail"})
@@ -70,11 +69,7 @@ function RegisterFilteredEvents()
 
   --== ON_ENTITY_CLONED ==--
   -- When a loaded wagon is cloned, also clone the data and loaded vehicle entity.
-  local cloned_filters = filterLib.generateNameFilter(storage.loadedWagonList)
-  table.insert(cloned_filters, {filter="name", name="loading-ramp"})
-  table.insert(cloned_filters, {filter="type", type="straight-rail"})
-  table.insert(cloned_filters, {filter="type", type="legacy-straight-rail"})
-  script.on_event(defines.events.on_entity_cloned, OnEntityCloned, cloned_filters)
+  script.on_event(defines.events.on_entity_cloned, OnEntityCloned, built_filters)
 
   -- On_Nth_Tick for Loading Ramp rail placement update
   RegisterRailPlacedNthTick()

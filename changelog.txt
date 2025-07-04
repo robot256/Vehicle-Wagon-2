@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.1.13
+Date: 2025-07-04
+  Bugfixes:
+    - Fixed that vehicle wagons could not be repaired by the player.
+    - Fixed that vehicle wagon equipment grids could not be opened.
+    - Ensure that quality can't change vehicle wagon inventory size.
+---------------------------------------------------------------------------------------------------
 Version: 4.1.12
 Date: 2025-06-22
   Bugfixes:

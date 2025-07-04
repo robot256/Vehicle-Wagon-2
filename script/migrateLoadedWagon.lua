@@ -30,9 +30,6 @@ function migrateLoadedWagon(loaded_unit_number)
     return
   end
 
-  -- Make sure the player can't open the loaded wagon
-  loaded_wagon.operable = false
-
   -- Find a valid unload position on the hidden surface
   local surface = getHiddenSurface()
   local unload_position = getTeleportCoordinate() --surface.find_non_colliding_position(wagon_data.name, {0,0}, 0, 1)

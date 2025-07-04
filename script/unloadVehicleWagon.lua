@@ -144,8 +144,6 @@ function unloadVehicleWagon(action)
     
     -- Check that unloaded wagon was created correctly
     if wagon and wagon.valid then
-      -- Prevent player from opening shadow inventory
-      wagon.operable = false
       -- Restore correct minable property to empty wagon
       if not storage.unminable_enabled then
         wagon.minable = true

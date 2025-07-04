@@ -21,6 +21,7 @@ if settings.startup["vehicle-wagon-inventory-slots"].value == "none" then
 else
   vehicle_wagon.inventory_size = 1
 end
+vehicle_wagon.quality_affects_inventory_size = false
 table.insert(vehicle_wagon.flags, "no-automated-item-removal")
 table.insert(vehicle_wagon.flags, "no-automated-item-insertion")
 vehicle_wagon.minable = {mining_time = 1, result = "vehicle-wagon"}

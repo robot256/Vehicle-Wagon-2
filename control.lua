@@ -486,9 +486,6 @@ function OnBuiltEntity(event)
       entity.destroy()
       surface.create_entity(newGhost)
     end
-  elseif entity.name == "vehicle-wagon" then
-    -- Prevent player from opening shadow inventory
-    entity.operable = false
   else
     -- Loading ramp handler
     OnRampOrStraightRailCreated(event)
@@ -590,7 +587,16 @@ function OnPlayerDrivingChangedState(event)
 end
 script.on_event(defines.events.on_player_driving_changed_state, OnPlayerDrivingChangedState)
 
-
+function OnPlayerOpenedGui(event)
+  -- If player opens GUI of a vehicle wagon, prevent them from seeing the inventory screen
+  if event.entity and (event.entity.name == "vehicle-wagon" or storage.loadedWagonMap[event.entity.name]) then
+    game.players[event.player_index].opened = nil
+    if event.entity.grid then
+      game.players[event.player_index].opened = event.entity.grid
+    end
+  end
+end
+script.on_event(defines.events.on_gui_opened, OnPlayerOpenedGui)
 
 
 ------------------------- BLUEPRINT HANDLING ---------------------------------------

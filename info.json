@@ -1,13 +1,13 @@
 {
     "name": "VehicleWagon2",
-    "version": "4.1.12",
+    "version": "4.1.13",
     "factorio_version": "2.0",
     "title": "Vehicle Wagon 2",
     "author": "robot256",
     "homepage": "",
     "contact": "https://forums.factorio.com/memberlist.php?mode=viewprofile&u=63685",
     "dependencies": [
-      "base >= 2.0.26",
+      "base >= 2.0.29",
       "vehicle-wagon-graphics >= 1.0.1",
       "Robot256Lib"
     ],
