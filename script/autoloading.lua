@@ -75,6 +75,16 @@ function addUnloadingRampToTrain(ramp, rail, train, wagon, vehicle)
   end
 end
 
+
+local function rotated_bounding_box_contains_point(box, point)
+  local box_center = math2d.bounding_box.get_centre(box)
+  local box_angle = box.orientation * 360
+  local point_relative = math2d.position.subtract(point, box_center)
+  local rotated_point_relative = math2d.position.rotate_vector(point_relative, -box_angle)
+  local rotated_point = math2d.position.add(rotated_point_relative, box_center)
+  return math2d.bounding_box.contains_point(box, rotated_point)
+end
+
 local function OnTrainChangedState(event)
   local train = event.train
   if train.state == defines.train_state.wait_station then
@@ -97,7 +107,7 @@ local function OnTrainChangedState(event)
         if check_loading and storage.loading_rails[rail.unit_number] then
           for ramp_id,ramp in pairs(storage.loading_rails[rail.unit_number]) do
             for wagon_id,wagon in pairs(empty_wagons) do
-              if math2d.bounding_box.contains_point(wagon.bounding_box, ramp.drop_position) then
+              if rotated_bounding_box_contains_point(wagon.selection_box, ramp.drop_position) then
                 -- This wagon is in the drop zone of this ramp
                 addLoadingRampToTrain(ramp, rail, train, wagon)
               end
@@ -107,7 +117,7 @@ local function OnTrainChangedState(event)
         if check_unloading and storage.unloading_rails[rail.unit_number] then
           for ramp_id,ramp in pairs(storage.unloading_rails[rail.unit_number]) do
             for wagon_id,wagon in pairs(loaded_wagons) do
-              if math2d.bounding_box.contains_point(wagon.bounding_box, ramp.pickup_position) then
+              if rotated_bounding_box_contains_point(wagon.bounding_box, ramp.pickup_position) then
                 -- This wagon is in the pickup zone of this ramp
                 local wagon_data = storage.wagon_data[wagon.unit_number]
                 if wagon_data then
