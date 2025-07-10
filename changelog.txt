@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.1.14
+Date: 2025-07-09
+  Features:
+    - Vehicles can now be loaded and unloaded with players inside them!
+    - Driver will be placed in wagon, passenger will be ejected.
+    - Wagon rider will be put in unloaded vehicle.
+  Bugfixes:
+    - Fixed that loading ramps would sometimes not work on horizontal rails.
+---------------------------------------------------------------------------------------------------
 Version: 4.1.13
 Date: 2025-07-04
   Bugfixes:

@@ -110,18 +110,6 @@ function loadVehicleWagon(action)
       saveData.icon = renderIcon(loaded_wagon, vehicle.name)
     end
     
-    -- Delete the excess AI character, if any
-    passenger = (vehicle.type == "car" and vehicle.get_passenger()) or nil
-    if passenger then
-      -- Eject passenger regardless
-      if string.find(passenger.name, "%-_%-driver") then
-        -- If AAI driver was in passenger slot, eject and destroy it
-        game.print("Killing AI passenger")
-        vehicle.set_passenger(nil)
-        passenger.destroy()
-      end
-    end
-    
     -- Save the wagon contents upon successful teleport
     storage.wagon_data[unit_number] = saveData
   end

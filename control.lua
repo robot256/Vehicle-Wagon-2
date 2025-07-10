@@ -549,27 +549,10 @@ function OnEntityCloned(event)
 end
 
 
---== ON_PLAYER_DRIVING_CHANGED_STATE ==--
-function OnPlayerDrivingChangedState(event)
-  -- Eject player from unloaded wagon
-  -- Cancel selections/actions when player enters selected vehicle or wagon
-  local player = game.players[event.player_index]
-  if player.vehicle then
-    local vehicle = player.vehicle
-    if vehicle.name == "vehicle-wagon" then
-      player.driving = false
-    elseif storage.loadedWagonMap[vehicle.name] then
-      clearWagon(vehicle.unit_number, {silent=true, sound=true})
-    elseif (vehicle.type == "car" or vehicle.type == "spider-vehicle") then
-      clearVehicle(vehicle, {silent=true, sound=true})
-    end
-  end
-
-end
-script.on_event(defines.events.on_player_driving_changed_state, OnPlayerDrivingChangedState)
-
+--== ON_PLAYER_OPENED_GUI ==--
+-- If player opens GUI of a vehicle wagon, prevent them from seeing the inventory screen
+-- Switch to equipment grid if any, or close the GUI immediately.
 function OnPlayerOpenedGui(event)
-  -- If player opens GUI of a vehicle wagon, prevent them from seeing the inventory screen
   if event.entity and (event.entity.name == "vehicle-wagon" or storage.loadedWagonMap[event.entity.name]) then
     game.players[event.player_index].opened = nil
     if event.entity.grid then

@@ -23,3 +23,6 @@ require("data.update_stats")
 if settings.startup["vehicle-wagon-inventory-slots"].value ~= "full-and-empty" then
   data.raw["cargo-wagon"]["vehicle-wagon"].inventory_size = 0
 end
+
+-- Remove empty wagon passenger slot
+data.raw["cargo-wagon"]["vehicle-wagon"].allow_passengers = false
