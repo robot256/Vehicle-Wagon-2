@@ -78,7 +78,7 @@ end
 
 local function rotated_bounding_box_contains_point(box, point)
   local box_center = math2d.bounding_box.get_centre(box)
-  local box_angle = box.orientation * 360
+  local box_angle = (box.orientation or 0) * 360
   local point_relative = math2d.position.subtract(point, box_center)
   local rotated_point_relative = math2d.position.rotate_vector(point_relative, -box_angle)
   local rotated_point = math2d.position.add(rotated_point_relative, box_center)
