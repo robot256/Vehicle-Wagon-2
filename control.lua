@@ -168,9 +168,9 @@ function process_tick(event)
       ------- LOADING OPERATION --------
       elseif action.status == "load" and action.tick == current_tick then
         -- Check that the wagon and vehicle indicated by the player are a valid target for loading
-        if not vehicle or not vehicle.valid then
+        if not vehicle or not vehicle.valid or vehicle.to_be_deconstructed() then
           if player then player.create_local_flying_text{text={"vehicle-wagon2.vehicle-invalid-error"}} end
-        elseif not wagon or not wagon.valid then
+        elseif not wagon or not wagon.valid or wagon.to_be_deconstructed() then
           if player then player.create_local_flying_text{text={"vehicle-wagon2.wagon-invalid-error"}} end
         elseif wagon.train.speed ~= 0 then
           if player then player.create_local_flying_text{text={"vehicle-wagon2.train-in-motion-error"}, position=wagon.position} end
@@ -437,7 +437,7 @@ script.on_event(defines.events.on_picked_up_item, OnPickedUpItem)
 function OnMarkedForDeconstruction(event)
   local entity = event.entity
   -- Delete any player selections or load/unload actions associated with this wagon
-  if entity.name == "vehicle-wagon" or storage.loadedWagonMap[entity.name] then
+  if entity.name == "vehicle-wagon" then
     clearWagon(entity.unit_number)
   elseif (entity.type == "car" or entity.type == "spider-vehicle") then
     clearVehicle(entity.unit_number)

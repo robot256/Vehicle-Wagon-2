@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.1.16
+Date: 2025-10-06
+  Changes:
+    - Prevent loading of vehicles and wagons that are marked for deconstruction.
+  Bugfixes:
+    - Fixed compatibility with Krastorio2.
+---------------------------------------------------------------------------------------------------
 Version: 4.1.15
 Date: 2025-07-10
   Bugfixes:

@@ -34,13 +34,15 @@ local function OnPlayerSelectedArea(event)
   for _,entity in pairs(event.entities) do
     if entity and entity.valid then
       if storage.loadedWagonMap[entity.name]then
+        -- Allow unloading of marked-for-deconstruction wagons
         if entity.draw_data.height == 0 then    -- Only select wagons on ground level
           table.insert(selected_loaded_wagons, entity)
         else
           wagon_height_error = true
           message_target = entity
         end
-      elseif entity.name == "vehicle-wagon" then
+      elseif entity.name == "vehicle-wagon" and not entity.to_be_deconstructed() then
+        -- Prevent loading of marked-for-deconstruction wagons
         if entity.draw_data.height == 0 then    -- Only select wagons on ground level
           table.insert(selected_empty_wagons, entity)
         else
@@ -50,7 +52,8 @@ local function OnPlayerSelectedArea(event)
       elseif entity.name == "loading-ramp" then
         table.insert(selected_ramps, entity)
         --game.print("Selected ramp "..tostring(entity))
-      elseif entity.type == "car" or entity.type == "spider-vehicle" then
+      elseif (entity.type == "car" or entity.type == "spider-vehicle") and not entity.to_be_deconstructed() then
+        -- Prevent loading of marked-for-deconstruction vehicles
         table.insert(selected_vehicles, entity)
       end
     end
