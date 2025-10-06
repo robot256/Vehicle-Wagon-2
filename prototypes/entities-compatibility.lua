@@ -211,8 +211,6 @@ end
 
 
 if mods["Krastorio2"] then
-  require("__Krastorio2__/lib/public/data-stages/paths")
-
   -- Advanced Tank is also comically large
   if data.raw.car["kr-advanced-tank"] and data.raw.car["kr-advanced-tank"].weight <= maxWeight then
     local loaded_advanced_tank = util.table.deepcopy(vehicle_wagon)
@@ -239,86 +237,33 @@ if mods["Krastorio2"] then
           },
           {
             flags = {"no-scale"},
-            width = 208,
-            height = 208,
+            width = 416,
+            height = 416,
             direction_count = 128,
             shift = {0, -0.5},
-            scale = 0.95,
+            scale = 0.475,
             filenames = 
             {
-              kr_entities_path .. "advanced-tank/advanced-tank-base.png"
-            },
-            line_length = 16,
-            lines_per_file = 8
-          },--[[
-          {
-            width = 250,
-            height = 250,
-            direction_count = 128,
-            shift = {0, -0.5},
-            scale = 0.95,
-            filenames = 
-            {
-              kr_entities_path .. "advanced-tank/advanced-tank-turret.png"
+              "__Krastorio2Assets__/buildings/advanced-tank/advanced-tank-base.png"
             },
             line_length = 16,
             lines_per_file = 8
           },
           {
-            width = 208,
-            height = 208,
+            flags = {"no-scale"},
+            width = 416,
+            height = 416,
+            apply_runtime_tint = true,
             direction_count = 128,
             shift = {0, -0.5},
-            line_length = 16,
-            scale = 0.95,
-            stripes =
+            scale = 0.475,
+            filenames = 
             {
-              {
-                filename = kr_entities_path .. "advanced-tank/advanced-tank-base.png",
-                width_in_frames = 16,
-                height_in_frames = 8
-              }
+              "__Krastorio2Assets__/buildings/advanced-tank/advanced-tank-base-mask.png"
             },
+            line_length = 16,
+            lines_per_file = 8
           },
-          {
-            width = 258,
-            height = 258,
-            frame_count = 1,
-            draw_as_shadow = true,
-            direction_count = 64,
-            animation_speed = 6,
-            max_advance = 0.2,
-            line_length = 16,
-            shift = {0.75, 0.25},
-            scale = 0.95,
-            stripes = 
-            {
-              {
-                filename = kr_entities_path .. "advanced-tank/advanced-tank-turret-shadow.png",
-                width_in_frames = 8,
-                height_in_frames = 8
-              }
-            },
-          },
-          {
-            width = 250,
-            height = 250,
-            frame_count = 1,
-            direction_count = 64,
-            shift = {0, 0.25},
-            scale = 0.95,
-            animation_speed = 6,
-            max_advance = 0.2,
-            line_length = 16,
-            stripes =
-            {
-              {
-                filename = kr_entities_path .. "advanced-tank/advanced-tank-turret.png",
-                width_in_frames = 8,
-                height_in_frames = 8
-              }
-            },
-          }--]]
         }
       }
     }
