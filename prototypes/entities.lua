@@ -25,6 +25,8 @@ vehicle_wagon.quality_affects_inventory_size = false
 table.insert(vehicle_wagon.flags, "no-automated-item-removal")
 table.insert(vehicle_wagon.flags, "no-automated-item-insertion")
 vehicle_wagon.minable = {mining_time = 1, result = "vehicle-wagon"}
+vehicle_wagon.factoriopedia_simulation = nil
+vehicle_wagon.max_speed = nil
 vehicle_wagon.horizontal_doors = nil
 vehicle_wagon.vertical_doors = nil
 vehicle_wagon.pictures =
@@ -77,7 +79,71 @@ vehicle_wagon.pictures =
 data:extend{vehicle_wagon}
 
 
-local loaded_car = util.table.deepcopy(vehicle_wagon)
+local loaded_tarp = util.table.deepcopy(vehicle_wagon)
+loaded_tarp.name = "loaded-vehicle-wagon-tarp"
+table.insert(loaded_tarp.flags, "not-upgradable")
+loaded_tarp.deconstruction_alternative = "vehicle-wagon"
+loaded_tarp.hidden_in_factoriopedia = true
+loaded_tarp.pictures =
+{
+  rotated = {
+    layers =
+    {
+      {
+        flags = {"no-scale"},
+        priority = "very-low",
+        width = 256,
+        height = 256,
+        direction_count = 128,
+        filenames =
+        {
+          "__vehicle-wagon-graphics__/graphics/cargo_fb_sheet.png",
+          "__vehicle-wagon-graphics__/graphics/cargo_fb_sheet.png"
+        },
+        line_length = 8,
+        lines_per_file = 8,
+        shift={0.4, -1.20}
+      },
+      {
+        flags = {"no-scale"},
+        width = 192,
+        height = 192,
+        direction_count = 128,
+        shift = {0, -0.5},
+        scale = 0.95,
+        filenames =
+        {
+          "__vehicle-wagon-graphics__/graphics/tarp/tarp-shadow-1.png",
+          "__vehicle-wagon-graphics__/graphics/tarp/tarp-shadow-2.png",
+          "__vehicle-wagon-graphics__/graphics/tarp/tarp-shadow-3.png",
+          "__vehicle-wagon-graphics__/graphics/tarp/tarp-shadow-4.png"
+        },
+        line_length = 8,
+        lines_per_file = 5,
+      },
+      {
+        flags = {"no-scale"},
+        width = 192,
+        height = 192,
+        direction_count = 128,
+        shift = {0, -0.5},
+        scale = 0.95,
+        filenames =
+        {
+          "__vehicle-wagon-graphics__/graphics/tarp/tarp-1.png",
+          "__vehicle-wagon-graphics__/graphics/tarp/tarp-2.png",
+          "__vehicle-wagon-graphics__/graphics/tarp/tarp-3.png",
+          "__vehicle-wagon-graphics__/graphics/tarp/tarp-4.png"
+        },
+        line_length = 8,
+        lines_per_file = 5,
+      }
+    }
+  }
+}
+
+
+local loaded_car = util.table.deepcopy(loaded_tarp)
 loaded_car.name = "loaded-vehicle-wagon-car"
 loaded_car.pictures =
 {
@@ -168,68 +234,7 @@ loaded_car.pictures =
   }
 }
 
-local loaded_tarp = util.table.deepcopy(vehicle_wagon)
-loaded_tarp.name = "loaded-vehicle-wagon-tarp"
-loaded_tarp.pictures =
-{
-  rotated = {
-    layers =
-    {
-      {
-        flags = {"no-scale"},
-        priority = "very-low",
-        width = 256,
-        height = 256,
-        direction_count = 128,
-        filenames =
-        {
-          "__vehicle-wagon-graphics__/graphics/cargo_fb_sheet.png",
-          "__vehicle-wagon-graphics__/graphics/cargo_fb_sheet.png"
-        },
-        line_length = 8,
-        lines_per_file = 8,
-        shift={0.4, -1.20}
-      },
-      {
-        flags = {"no-scale"},
-        width = 192,
-        height = 192,
-        direction_count = 128,
-        shift = {0, -0.5},
-        scale = 0.95,
-        filenames =
-        {
-          "__vehicle-wagon-graphics__/graphics/tarp/tarp-shadow-1.png",
-          "__vehicle-wagon-graphics__/graphics/tarp/tarp-shadow-2.png",
-          "__vehicle-wagon-graphics__/graphics/tarp/tarp-shadow-3.png",
-          "__vehicle-wagon-graphics__/graphics/tarp/tarp-shadow-4.png"
-        },
-        line_length = 8,
-        lines_per_file = 5,
-      },
-      {
-        flags = {"no-scale"},
-        width = 192,
-        height = 192,
-        direction_count = 128,
-        shift = {0, -0.5},
-        scale = 0.95,
-        filenames =
-        {
-          "__vehicle-wagon-graphics__/graphics/tarp/tarp-1.png",
-          "__vehicle-wagon-graphics__/graphics/tarp/tarp-2.png",
-          "__vehicle-wagon-graphics__/graphics/tarp/tarp-3.png",
-          "__vehicle-wagon-graphics__/graphics/tarp/tarp-4.png"
-        },
-        line_length = 8,
-        lines_per_file = 5,
-      }
-    }
-  }
-}
-
-
-local loaded_tank = util.table.deepcopy(vehicle_wagon)
+local loaded_tank = util.table.deepcopy(loaded_tarp)
 loaded_tank.name = "loaded-vehicle-wagon-tank"
 loaded_tank.pictures = 
 {

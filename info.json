@@ -1,14 +1,14 @@
 {
     "name": "VehicleWagon2",
-    "version": "4.1.16",
-    "factorio_version": "2.0",
+    "version": "4.2.0",
+    "factorio_version": "2.1",
     "title": "Vehicle Wagon 2",
     "author": "robot256",
     "homepage": "",
     "contact": "https://forums.factorio.com/memberlist.php?mode=viewprofile&u=63685",
     "dependencies": [
-      "base >= 2.0.59",
-      "vehicle-wagon-graphics >= 1.0.1",
+      "base",
+      "vehicle-wagon-graphics",
       "Robot256Lib"
     ],
     "description": "Winch vehicles onto trains and go for a ride!"

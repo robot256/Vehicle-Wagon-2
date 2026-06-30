@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.2.0
+Date: 2026-06-29
+  Features:
+    - Updated for Factorio 2.1.
+  Changes:
+    - Hide loaded wagons from Factoriopedia.
+    - Disallow upgrading loaded wagons (future feature planned).
+---------------------------------------------------------------------------------------------------
 Version: 4.1.16
 Date: 2025-10-06
   Changes:

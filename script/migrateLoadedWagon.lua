@@ -85,7 +85,7 @@ function migrateLoadedWagon(loaded_unit_number)
 
   -- Flags default to true on creation, and are only saved in wagon_data if they should be false
   -- But setting flags to nil is same as setting false, so only assign false if wagon_data entry is not nil
-  if wagon_data.minable == false then vehicle.minable = false end
+  if wagon_data.minable == false then vehicle.minable_flag = false end
   if wagon_data.destructible == false then vehicle.destructible = false end
   --if wagon_data.operable == false then vehicle.operable = false end
   if wagon_data.rotatable == false then vehicle.rotatable = false end

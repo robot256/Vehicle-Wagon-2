@@ -56,10 +56,10 @@ function loadVehicleWagon(action)
   saveData.vehicle = vehicle
   saveData.name = vehicle.name
   
-  if not vehicle.active then
+  if vehicle.disabled_by_script then
     saveData.active = false
   end
-  vehicle.active = false  -- Disable vehicle before transport
+  vehicle.disabled_by_script = true  -- Disable vehicle before transport
   
   if not vehicle.operable then
     saveData.operable = false

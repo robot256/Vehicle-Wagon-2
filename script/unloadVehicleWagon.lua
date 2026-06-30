@@ -104,14 +104,18 @@ function unloadVehicleWagon(action)
   -- Vehicle must be made active (if necessary) before it is teleported, or
   -- Autodrive will wrongly disable it on the GUI!
   -- (If wagon_data.active was not set, the vehicle was active!)
-  vehicle.active = (wagon_data.active == nil)
+  if wagon_data.active == nil or wagon_data.active == true then
+    vehicle.disabled_by_script = false
+  else
+    vehicle.disabled_by_script = true
+  end
   vehicle.operable = (wagon_data.operable == nil)
 
   if not vehicle.teleport(unload_position, surface, true, false) then
     -- Vehicle not teleported. leave data and wagon as it is
 
     -- Make vehicle inactive and inoperable again!
-    vehicle.active = false
+    vehicle.disabled_by_script = true
     vehicle.operable = false
 
     return
@@ -161,7 +165,7 @@ function unloadVehicleWagon(action)
     if wagon and wagon.valid then
       -- Restore correct minable property to empty wagon
       if not storage.unminable_enabled then
-        wagon.minable = true
+        wagon.minable_flag = true
       end
     else
       if player then

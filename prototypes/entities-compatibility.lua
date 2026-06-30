@@ -17,12 +17,12 @@ local useWeights = settings.startup["vehicle-wagon-use-custom-weights"].value
 local maxWeight = (useWeights and settings.startup["vehicle-wagon-maximum-weight"].value) or math.huge
 local compatibilityEntities = settings.startup["vehicle-wagon-compatibility-entities"].value
 
-local vehicle_wagon = data.raw["cargo-wagon"]["vehicle-wagon"]
+--local vehicle_wagon = data.raw["cargo-wagon"]["vehicle-wagon"]
 local loaded_tank = data.raw["cargo-wagon"]["loaded-vehicle-wagon-tank"]
 local loaded_vehicle_wagon_tarp = data.raw["cargo-wagon"]["loaded-vehicle-wagon-tarp"]
 
 if compatibilityEntities or (data.raw.car["dumper-truck"] and data.raw.car["dumper-truck"].weight <= maxWeight) then
-  local loaded_truck = util.table.deepcopy(vehicle_wagon)
+  local loaded_truck = util.table.deepcopy(loaded_vehicle_wagon_tarp)
   loaded_truck.name = "loaded-vehicle-wagon-truck"
   loaded_truck.pictures =
   {
@@ -86,7 +86,7 @@ end
 
 
 if compatibilityEntities or (data.raw.car["cargo-plane"] and data.raw.car["cargo-plane"].weight <= maxWeight) then
-  local loaded_cargo_plane = util.table.deepcopy(vehicle_wagon)
+  local loaded_cargo_plane = util.table.deepcopy(loaded_vehicle_wagon_tarp)
   loaded_cargo_plane.name = "loaded-vehicle-wagon-cargoplane"
   loaded_cargo_plane.pictures =
   {
@@ -114,7 +114,7 @@ if compatibilityEntities or (data.raw.car["cargo-plane"] and data.raw.car["cargo
 end
 
 if compatibilityEntities or (data.raw.car["jet"] and data.raw.car["jet"].weight <= maxWeight) then
-  local loaded_jet = util.table.deepcopy(vehicle_wagon)
+  local loaded_jet = util.table.deepcopy(loaded_vehicle_wagon_tarp)
   loaded_jet.name = "loaded-vehicle-wagon-jet"
   loaded_jet.pictures =
   {
@@ -142,7 +142,7 @@ if compatibilityEntities or (data.raw.car["jet"] and data.raw.car["jet"].weight 
 end
 
 if compatibilityEntities or (data.raw.car["gunship"] and data.raw.car["gunship"].weight <= maxWeight) then
-  local loaded_gunship = util.table.deepcopy(vehicle_wagon)
+  local loaded_gunship = util.table.deepcopy(loaded_vehicle_wagon_tarp)
   loaded_gunship.name = "loaded-vehicle-wagon-gunship"
   loaded_gunship.pictures =
   {
@@ -213,7 +213,7 @@ end
 if mods["Krastorio2"] then
   -- Advanced Tank is also comically large
   if data.raw.car["kr-advanced-tank"] and data.raw.car["kr-advanced-tank"].weight <= maxWeight then
-    local loaded_advanced_tank = util.table.deepcopy(vehicle_wagon)
+    local loaded_advanced_tank = util.table.deepcopy(loaded_vehicle_wagon_tarp)
     loaded_advanced_tank.name = "loaded-vehicle-wagon-kr-advanced-tank"
     loaded_advanced_tank.pictures = 
     {
