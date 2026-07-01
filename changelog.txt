@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.2.1
+Date: 2026-06-30
+  Bugfixes:
+    - Fixed crash from invalid loading ramp entities.
+    - Fix an old typo bug that might have affected how loading ramp filters operate (backported).
+---------------------------------------------------------------------------------------------------
 Version: 4.2.0
 Date: 2026-06-29
   Features:
@@ -6,6 +12,12 @@ Date: 2026-06-29
   Changes:
     - Hide loaded wagons from Factoriopedia.
     - Disallow upgrading loaded wagons (future feature planned).
+---------------------------------------------------------------------------------------------------
+Version: 4.1.17
+Date: 2026-06-30
+  Bugfixes:
+    - Fixed crash from invalid loading ramp entities (backported).
+    - Fix an old typo bug that might have affected how loading ramp filters operate (backported).
 ---------------------------------------------------------------------------------------------------
 Version: 4.1.16
 Date: 2025-10-06
