@@ -23,7 +23,7 @@ cd ..
 xcopy /S /I /E %Moddir% temp\%Modname% /EXCLUDE:%Moddir%\publish_exclude.txt
 cd temp
 echo Compressing %Modname%_%Version%.zip...
-7z a ..\%Modname%_%Version%.zip %Modname%
+7z a ..\..\%Modname%_%Version%.zip %Modname%
 
 echo Cleaning up temporary files...
 rd /S /Q %Modname%

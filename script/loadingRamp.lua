@@ -405,68 +405,80 @@ function OnLoadingRampOrRailDestroyed(event)
     -- First check if it's a loading ramp
     local ramp_entry = storage.loading_ramps[unit_number]
     if ramp_entry then
+      local ramp_id = unit_number
       -- Destroy the dummy chest
-      if ramp_entry.chest then
+      if ramp_entry.chest and ramp_entry.chest.valid then
         ramp_entry.chest.destroy()
       end
-      -- Unlink the loading rail, if any
-      if ramp_entry.loading_rail and ramp_entry.loading_rail.valid then
-        local rid = ramp_entry.loading_rail.unit_number
-        storage.loading_rails[rid][unit_number] = nil
-        if not next(storage.loading_rails[rid]) then
-          storage.loading_rails[rid] = nil
+      
+      -- Unlink the loading rail by checking the whole list, not just the linked one
+      for rail_id,ramp_list in pairs(storage.loading_rails) do
+        if ramp_list[ramp_id] then
+          ramp_list[ramp_id] = nil
+        end
+        if not next(storage.loading_rails[rail_id]) then
+          storage.loading_rails[rail_id] = nil
         end
       end
-      -- Unlink the unloading rails, if any
-      if ramp_entry.unloading_rails and next(ramp_entry.unloading_rails) then
-        for rail_id,_ in pairs(ramp_entry.unloading_rails) do
-          storage.unloading_rails[rail_id][unit_number] = nil
-          if not next(storage.unloading_rails[rail_id]) then
-            storage.unloading_rails[rail_id] = nil
-          end
+      
+      -- Unlink the unloading rails by checking the whole list, not just the linked one
+      for rail_id,ramp_list in pairs(storage.unloading_rails) do
+        if ramp_list[ramp_id] then
+          ramp_list[ramp_id] = nil
+        end
+        if not next(storage.unloading_rails[rail_id]) then
+          storage.unloading_rails[rail_id] = nil
         end
       end
+      
       -- Remove from surface index (used to check newly placed rails)
-      storage.ramps_by_surface[ramp_entry.surface_index][unit_number] = nil
+      storage.ramps_by_surface[ramp_entry.surface_index][ramp_id] = nil
       if not next(storage.ramps_by_surface[ramp_entry.surface_index]) then
         storage.ramps_by_surface[ramp_entry.surface_index] = nil
         storage.rail_placed_queues[ramp_entry.surface_index] = nil
       end
       -- Remove from active trains
-      if storage.active_ramps[unit_number] then
-        storage.stopped_trains[storage.active_ramps[unit_number].train.id].ramps[unit_number] = nil
-        storage.active_ramps[unit_number] = nil
+      if storage.active_ramps[ramp_id] then
+        storage.stopped_trains[storage.active_ramps[ramp_id].train.id].ramps[ramp_id] = nil
+        storage.active_ramps[ramp_id] = nil
         updateOnTickStatus()
       end
       
       -- Remove entry from global table
-      storage.loading_ramps[unit_number] = nil
+      storage.loading_ramps[ramp_id] = nil
       return true
     
     else
       -- Not a ramp, check if it's a rail for any ramps
+      local rail_id = unit_number
       local found = false
-      local loading_rail_entry = storage.loading_rails[unit_number]
-      if loading_rail_entry then
+      if storage.loading_rails[rail_id] then
+        storage.loading_rails[rail_id] = nil
         found = true
-        for ramp_id,ramp in pairs(loading_rail_entry) do
-          storage.loading_ramps[ramp_id].loading_rail = nil
-          if ramp.valid then
-            setRampVectors(ramp)
-          end
-        end
       end
-      -- Now check if it's an unloading rail for any ramps
-      local unloading_rail_entry = storage.unloading_rails[unit_number]
-      if unloading_rail_entry then
+      if storage.unloading_rails[rail_id] then
+        storage.unloading_rails[rail_id] = nil
         found = true
-        for ramp_id,ramp in pairs(unloading_rail_entry) do
-          local unloading_ramp_entry = storage.loading_ramps[ramp_id]
-          unloading_ramp_entry.unloading_rails[unit_number] = nil
-          if not next(unloading_ramp_entry.unloading_rails) then
-            unloading_ramp_entry.unloading_rails = nil
+      end
+      -- Go through the whole ramp list if it was found in any of the rail lists
+      if found then
+        for ramp_id,ramp_entry in (storage.loading_ramps) do
+          local ramp_found = false
+          if ramp_entry.loading_rails and ramp_entry.loading_rails[rail_id] then
+            ramp_entry.loading_rails[rail_id] = nil
+            if not next(ramp_entry.loading_rails) then
+              ramp_entry.loading_rails = nil
+            end
+            ramp_found = true
           end
-          if ramp.valid then
+          if ramp_entry.unloading_rails and ramp_entry.unloading_rails[rail_id] then
+            ramp_entry.unloading_rails[rail_id] = nil
+            if not next(ramp_entry.unloading_rails) then
+              ramp_entry.unloading_rails = nil
+            end
+            ramp_found = true
+          end
+          if ramp_found and ramp.valid then
             setRampVectors(ramp)
           end
         end

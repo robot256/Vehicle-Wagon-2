@@ -106,29 +106,39 @@ local function OnTrainChangedState(event)
       for _,rail in pairs(train.get_rails()) do
         if check_loading and storage.loading_rails[rail.unit_number] then
           for ramp_id,ramp in pairs(storage.loading_rails[rail.unit_number]) do
-            for wagon_id,wagon in pairs(empty_wagons) do
-              if rotated_bounding_box_contains_point(wagon.selection_box, ramp.drop_position) then
-                -- This wagon is in the drop zone of this ramp
-                addLoadingRampToTrain(ramp, rail, train, wagon)
+            if ramp.valid then
+              for wagon_id,wagon in pairs(empty_wagons) do
+                if rotated_bounding_box_contains_point(wagon.selection_box, ramp.drop_position) then
+                  -- This wagon is in the drop zone of this ramp
+                  addLoadingRampToTrain(ramp, rail, train, wagon)
+                end
               end
+            else
+              -- Purge this invalid ramp from the data structure
+              OnLoadingRampOrRailDestroyed{type=defines.target_type.entity, useful_id=ramp_id}
             end
           end
         end
         if check_unloading and storage.unloading_rails[rail.unit_number] then
           for ramp_id,ramp in pairs(storage.unloading_rails[rail.unit_number]) do
-            for wagon_id,wagon in pairs(loaded_wagons) do
-              if rotated_bounding_box_contains_point(wagon.bounding_box, ramp.pickup_position) then
-                -- This wagon is in the pickup zone of this ramp
-                local wagon_data = storage.wagon_data[wagon.unit_number]
-                if wagon_data then
-                  -- unloading_rail_index is always set after calling setRampVectors()
-                  addUnloadingRampToTrain(ramp, rail, train, wagon, wagon_data.vehicle)
-                else
-                  -- Wagon has no data attached to it.  Replace with empty wagon
-                  deleteWagon(wagon.unit_number)
-                  replaceCarriage(wagon, "vehicle-wagon", false, false)
+            if ramp.valid then
+              for wagon_id,wagon in pairs(loaded_wagons) do
+                if rotated_bounding_box_contains_point(wagon.bounding_box, ramp.pickup_position) then
+                  -- This wagon is in the pickup zone of this ramp
+                  local wagon_data = storage.wagon_data[wagon.unit_number]
+                  if wagon_data then
+                    -- unloading_rail_index is always set after calling setRampVectors()
+                    addUnloadingRampToTrain(ramp, rail, train, wagon, wagon_data.vehicle)
+                  else
+                    -- Wagon has no data attached to it.  Replace with empty wagon
+                    deleteWagon(wagon.unit_number)
+                    replaceCarriage(wagon, "vehicle-wagon", false, false)
+                  end
                 end
               end
+            else
+              -- Purge this invalid ramp from the data structure
+              OnLoadingRampOrRailDestroyed{type=defines.target_type.entity, useful_id=ramp_id}
             end
           end
         end
@@ -257,7 +267,7 @@ function ProcessActiveRamps()
             end
           else
             if not entry.vehicle then
-              entry.vehicle = storage.wagon_data[entry.wagon.unit_number].Vehicle
+              entry.vehicle = storage.wagon_data[entry.wagon.unit_number].vehicle
             end
             if doesVehiclePassFilter(entry.ramp, entry.vehicle) then
               -- Unloading is easy
