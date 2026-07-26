@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 4.2.2
+Date: 2026-07-25
+  Changes:
+    - Fix that carriage replacement on track junctions sometimes breaks the train (with Robot256Lib version 2.1.3).
+---------------------------------------------------------------------------------------------------
 Version: 4.2.1
 Date: 2026-06-30
   Bugfixes:
