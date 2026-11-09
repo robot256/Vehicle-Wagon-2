@@ -48,8 +48,8 @@ require("script.autoloading")
 --~ local mod_data = require("__VehicleWagon2__/mod_data")
 --~ VW = require("__Pi-C_lib__/common")(mod_data)
 
-AUTODRIVE = script.active_mods.autodrive and true or false
-GCKI = script.active_mods.GCKI and true or false
+AUTODRIVE = remote.interfaces.autodrive and true or false
+GCKI = remote.interfaces.GCKI and true or false
 
 --== ON_INIT ==--
 -- Initialize global data tables

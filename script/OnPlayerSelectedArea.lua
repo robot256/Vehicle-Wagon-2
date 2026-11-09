@@ -92,17 +92,17 @@ local function OnPlayerSelectedArea(event)
   --                     Compatibility with GCKI and Autodrive                    --
   ----------------------------------------------------------------------------------
     -- Don't check GCKI permissions if the mod was uninstalled or setting turned off
-  local check_GCKI = remote.interfaces["GCKI"] and
+  local check_GCKI = settings.global["vehicle-wagon-use-GCKI-permissions"] and
                       settings.global["vehicle-wagon-use-GCKI-permissions"].value
 
   -- Don't check Autodrive permissions if the mod was uninstalled or setting turned off
-  local check_AD = remote.interfaces["autodrive"] and
+  local check_AD = settings.global["vehicle-wagon-use-Autodrive-permissions"] and
                     settings.global["vehicle-wagon-use-Autodrive-permissions"].value
 
   -- Decide which interface to use for asking GCKI/Autodrive. Only 1 call is
   -- needed: If GCKI is active, it will know about vehicles' Autodrive_owner.
-  local AD_GCKI = (check_GCKI and remote.interfaces.GCKI.can_load_unload_vehicle and "GCKI") or
-                  (check_AD and remote.interfaces.autodrive.can_load_unload_vehicle and "autodrive")
+  local AD_GCKI = (check_GCKI and remote.interfaces.GCKI and remote.interfaces.GCKI.can_load_unload_vehicle and "GCKI") or
+                  (check_AD and remote.interfaces.autodrive and remote.interfaces.autodrive.can_load_unload_vehicle and "autodrive")
 
   local function get_AD_GCKI_permission(check_player, vehicle, wagon)
     --~ VW.entered_function({check_player, vehicle, wagon})

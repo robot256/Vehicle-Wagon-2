@@ -103,7 +103,7 @@ data:extend({
     --~ default_value = true
   --~ },
 --~ })
-if mods["autodrive"] then
+if mods["autodrive"] or mods["vehicle-_-rts-control"] or mods["autodrive-fixed"] then
   data:extend({
     {
       type = "bool-setting",
