@@ -57,6 +57,9 @@ function makeGlobalMaps()
     elseif p.weight > maxWeight then
       storage.vehicleMap[k] = nil  -- This vehicle is too heavy
       
+    elseif not getVehicleItem(k) then
+      storage.vehicleMap[k] = nil  -- No item can represent this vehicle in the wagon
+      
     elseif p.type == "spider-vehicle" then
       storage.vehicleMap[k] = "loaded-vehicle-wagon-tarp"  -- All Spidertrons become tarps until we have new graphics :)
     
