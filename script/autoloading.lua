@@ -239,7 +239,7 @@ function ProcessActiveRamps()
           -- Just ignore this right now, let's unload if we can
           if entry.loading then
             -- Loading is harder, search for a vehicle
-            local vehicles = surface.find_entities_filtered{name=storage.vehicleList,
+            local vehicles = surface.find_entities_filtered{name=storage.vehicleList, force=entry.ramp.force,
                 area=math2d.bounding_box.create_from_centre(entry.ramp.position, LOADING_SEARCH_RADIUS)}
             local closest
             local closest_distance = math.huge

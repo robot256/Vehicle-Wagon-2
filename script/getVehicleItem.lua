@@ -16,7 +16,7 @@ function getVehicleItem(entity_name)
   if item then return item end
   
   -- check for minable
-  item = prototype.minable_properties and prototype.minable_properties.products and prototype.minable_properties.products[1] and prototype.minable_properties.products[1].name
+  item = prototype.mineable_properties and prototype.mineable_properties.products and prototype.mineable_properties.products[1] and prototype.mineable_properties.products[1].name
   if item then return item end
   
   -- check for entity_name item

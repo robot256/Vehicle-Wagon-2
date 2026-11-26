@@ -52,7 +52,8 @@ local function OnPlayerSelectedArea(event)
       elseif entity.name == "loading-ramp" then
         table.insert(selected_ramps, entity)
         --game.print("Selected ramp "..tostring(entity))
-      elseif (entity.type == "car" or entity.type == "spider-vehicle") and not entity.to_be_deconstructed() then
+      elseif (entity.type == "car" or entity.type == "spider-vehicle") and not entity.to_be_deconstructed()
+          and not entity.prototype.has_flag("not-selectable-in-game") then
         -- Prevent loading of marked-for-deconstruction vehicles
         table.insert(selected_vehicles, entity)
       end
